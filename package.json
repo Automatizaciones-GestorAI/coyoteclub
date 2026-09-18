@@ -1,0 +1,25 @@
+{
+  "name": "coyote-admin",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@supabase/supabase-js": "2.45.4",
+    "qrcode": "1.5.3",
+    "html5-qrcode": "2.3.8",
+    "jose": "5.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.9",
+    "@types/react": "18.3.3",
+    "@types/qrcode": "1.5.5",
+    "typescript": "5.5.3"
+  }
+}
