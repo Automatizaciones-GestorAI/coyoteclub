@@ -68,7 +68,12 @@ export default function EntradasClient({ tiers, events }: { tiers: Tier[]; event
 
   return (
     <div style={{ minHeight: '100vh', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ position: 'fixed', top: 20, left: 24 }}>
+      <a href="/" className="display" style={{ fontSize: 18 }}>
+        COYOTE <span style={{ color: 'var(--accent)' }}>CLUB</span>
+      </a>
+    </div>
+    <div style={{ textAlign: 'center' }}>
         <div className="display" style={{ fontSize: 24, color: 'var(--text-dim)', marginBottom: 8 }}>
           COYOTE <span style={{ color: 'var(--accent)' }}>CLUB</span>
         </div>

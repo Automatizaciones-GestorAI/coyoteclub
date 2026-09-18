@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Coyote Club — Panel',
+  title: 'Coyote Club',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
