@@ -8,6 +8,7 @@ type Tier = {
   price_cents: number;
   kind: 'online' | 'door' | 'standing';
   event_id: string | null;
+  availability: 'ok' | 'low' | 'soldout';
 };
 type Evt = { id: string; title: string; event_date: string; event_time: string | null };
 
@@ -81,10 +82,13 @@ export default function EntradasClient({ tiers, events }: { tiers: Tier[]; event
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 20, width: '100%', maxWidth: 1100 }}>
         {tiers.map((tier) => (
-          <div key={tier.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div key={tier.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, opacity: tier.availability === 'soldout' ? 0.6 : 1 }}>
             <div>
-              <div className="label" style={{ color: tier.kind === 'door' ? 'var(--text-dim)' : 'var(--accent)' }}>
-                {tier.label}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 6, minHeight: 26 }}>
+                <div className="label" style={{ margin: 0, color: tier.kind === 'door' ? 'var(--text-dim)' : 'var(--accent)' }}>
+                  {tier.label}
+                </div>
+                {tier.availability === 'low' && <span className="badge-low">Quedan pocas</span>}
               </div>
               <div className="display" style={{ fontSize: 44 }}>
                 {(tier.price_cents / 100).toFixed(2).replace('.00', '')} €
@@ -93,6 +97,8 @@ export default function EntradasClient({ tiers, events }: { tiers: Tier[]; event
             </div>
             {tier.kind === 'door' ? (
               <div className="btn-outline" style={{ textAlign: 'center' }}>Pago en caja</div>
+            ) : tier.availability === 'soldout' ? (
+              <div className="btn-outline" style={{ textAlign: 'center' }}>Agotado</div>
             ) : (
               <button className="btn" onClick={() => openBuy(tier)}>
                 {tier.kind === 'standing' ? 'Comprar' : 'Comprar entrada'}

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import EntradasClient from './EntradasClient';
+import { availability } from '@/lib/stock';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,5 +17,11 @@ export default async function EntradasPage() {
     .eq('is_published', true)
     .order('sort_order');
 
-  return <EntradasClient tiers={tiers || []} events={events || []} />;
+  // El número de entradas que quedan no sale del servidor: solo el estado (ok / low / soldout).
+  const publicTiers = (tiers || []).map(({ stock, ...tier }) => ({
+    ...tier,
+    availability: availability({ kind: tier.kind, stock })
+  }));
+
+  return <EntradasClient tiers={publicTiers} events={events || []} />;
 }

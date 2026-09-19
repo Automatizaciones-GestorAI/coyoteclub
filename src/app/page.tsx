@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { esc, formatEventDate, formatPrice } from '@/lib/format';
+import { availability } from '@/lib/stock';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,14 +48,21 @@ export default async function Home() {
   const tiersHtml = (tiers || [])
     .map((tier) => {
       const price = formatPrice(tier.price_cents);
+      const state = availability(tier); // solo el estado sale al HTML, nunca el número
       const cta =
         tier.kind === 'door'
           ? `<div class="btn-outline" style="text-align: center;">Pago en caja</div>`
-          : `<a href="/entradas" class="btn" style="text-align: center;">${tier.kind === 'standing' ? 'Comprar' : 'Comprar entrada'}</a>`;
+          : state === 'soldout'
+            ? `<div class="btn-outline" style="text-align: center;">Agotado</div>`
+            : `<a href="/entradas" class="btn" style="text-align: center;">${tier.kind === 'standing' ? 'Comprar' : 'Comprar entrada'}</a>`;
+      const badge = state === 'low' ? `<span class="badge-low">Quedan pocas</span>` : '';
       return `
-      <div style="display: flex; flex-direction: column; gap: 24px; padding: clamp(28px, 6vw, 44px) clamp(22px, 5vw, 32px); border-radius: 20px; background: var(--bg-card); border: 1px solid var(--line);">
+      <div style="display: flex; flex-direction: column; gap: 24px; padding: clamp(28px, 6vw, 44px) clamp(22px, 5vw, 32px); border-radius: 20px; background: var(--bg-card); border: 1px solid var(--line);${state === 'soldout' ? ' opacity: 0.6;' : ''}">
         <div style="display: flex; flex-direction: column; gap: 6px;">
-          <div style="font-size: 14px; font-weight: 700; letter-spacing: 0.1em; color: ${tier.kind === 'door' ? 'var(--text-dim)' : ACCENT};">${esc(tier.label)}</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; min-height: 26px;">
+            <div style="font-size: 14px; font-weight: 700; letter-spacing: 0.1em; color: ${tier.kind === 'door' ? 'var(--text-dim)' : ACCENT};">${esc(tier.label)}</div>
+            ${badge}
+          </div>
           <div class="display" style="font-size: 52px; color: var(--text);">${price}</div>
           <div style="font-size: 15px; color: var(--text-dim);">${esc(tier.description)}</div>
         </div>

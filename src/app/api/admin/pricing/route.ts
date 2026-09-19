@@ -26,7 +26,8 @@ export async function POST(req: NextRequest) {
       price_cents: body.price_cents,
       kind: body.kind || 'online',
       is_active: body.is_active ?? true,
-      sort_order: body.sort_order ?? 0
+      sort_order: body.sort_order ?? 0,
+      ...(body.stock !== undefined ? { stock: body.stock } : {})
     })
     .select()
     .single();
