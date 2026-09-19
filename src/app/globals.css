@@ -230,3 +230,15 @@ button { cursor: pointer; font-family: inherit; }
   .table.stack .stack-title { grid-column: 1 / -1; font-weight: 700; font-size: 16px; }
   .table.stack .stack-title::before { content: none; }
 }
+
+/* Aviso rojo del menú (cobros por revisar) y etiquetas de estado de las entradas */
+.nav-alert { display: inline-block; margin-left: 8px; min-width: 20px; padding: 1px 6px; border-radius: 99px; background: #ff4d4d; color: #fff; font-size: 11px; font-weight: 700; text-align: center; line-height: 1.5; }
+.chip { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; border: 1px solid; white-space: nowrap; }
+.chip-ok { color: #2ecc71; background: rgba(46,204,113,0.1); border-color: rgba(46,204,113,0.5); }
+.chip-wait { color: #ffbe3c; background: rgba(255,190,60,0.1); border-color: rgba(255,190,60,0.5); }
+.chip-off { color: #ff6b6b; background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.5); }
+.chip-dim { color: var(--text-dim); background: transparent; border-color: var(--line); }
+.menu-pop { position: relative; display: inline-block; }
+.menu-pop > summary { list-style: none; cursor: pointer; }
+.menu-pop > summary::-webkit-details-marker { display: none; }
+.menu-pop .pop { position: absolute; z-index: 10; right: 0; top: calc(100% + 6px); min-width: 230px; display: flex; flex-direction: column; gap: 6px; padding: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }

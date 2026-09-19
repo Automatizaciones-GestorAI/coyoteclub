@@ -1,6 +1,8 @@
 import { supabaseAdmin } from '@/lib/supabase';
+import { CLUB_WHATSAPP, siteBase, whatsappLink } from '@/lib/site';
 import QRCode from 'qrcode';
 import AutoRefresh from './AutoRefresh';
+import CopyLink from './CopyLink';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +15,7 @@ const shell = {
   background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.16), transparent 55%), var(--bg)'
 } as const;
 
-function Message({ title, text, refresh, cta }: { title: string; text: string; refresh?: boolean; cta?: boolean }) {
+function Message({ title, text, refresh, cta, help }: { title: string; text: string; refresh?: boolean; cta?: boolean; help?: { text: string; href: string } }) {
   return (
     <div style={shell}>
       {/* Mientras el banco no confirma, la página se actualiza sola cada pocos segundos */}
@@ -22,6 +24,12 @@ function Message({ title, text, refresh, cta }: { title: string; text: string; r
         <img src="/images/logo.png" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 70%)', height: 'auto', margin: '0 auto' }} />
         <div className="display" style={{ fontSize: 28 }}>{title}</div>
         <div style={{ fontSize: 14, color: 'var(--text-dim)', lineHeight: 1.5 }}>{text}</div>
+        {help && (
+          <div style={{ border: '1px solid rgba(255,190,60,0.5)', background: 'rgba(255,190,60,0.08)', borderRadius: 12, padding: 12, fontSize: 13, lineHeight: 1.5, textAlign: 'left' }}>
+            {help.text}
+            <a href={help.href} target="_blank" rel="noopener" className="btn btn-sm" style={{ marginTop: 10, display: 'flex' }}>Escribir por WhatsApp</a>
+          </div>
+        )}
         {cta && (
           <a href="/entradas" className="btn" style={{ marginTop: 6 }}>Volver a entradas</a>
         )}
@@ -41,11 +49,43 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
   if (!ticket) {
     return <Message title="Entrada no encontrada" text="Revisa el enlace que recibiste. Si acabas de pagar, espera un momento y vuelve a abrirlo." />;
   }
+
+  const url = `${await siteBase()}/ticket/${ticket.qr_code}`;
+  const minutes = (Date.now() - new Date(ticket.created_at).getTime()) / 60000;
+  // Mensaje para el cliente que dice haber pagado: lleva su pedido para que el club lo localice enseguida
+  const helpHref = whatsappLink(CLUB_WHATSAPP, `Hola, he pagado mi entrada de Coyote Club y no me aparece. Nombre: ${ticket.buyer_name ?? ''}. Pedido: ${ticket.order_id ?? ''}. Enlace: ${url}`);
+
   if (ticket.status === 'pending') {
-    return <Message refresh title="Confirmando tu pago…" text="Estamos esperando la confirmación del banco. No cierres esta página: tu entrada aparecerá aquí en unos segundos." />;
+    return (
+      <Message
+        refresh
+        title="Confirmando tu pago…"
+        text="Estamos esperando la confirmación del banco. No cierres esta página: tu entrada aparecerá aquí en unos segundos."
+        help={minutes >= 3 ? { text: 'Está tardando más de lo normal. Si el banco ya te ha cobrado, no pagues otra vez: guarda este enlace y escríbenos con tu nombre y la hora del pago. Te damos tu entrada enseguida.', href: helpHref } : undefined}
+      />
+    );
   }
+
   if (ticket.status === 'cancelled') {
-    return <Message cta title="Pago no completado" text="No se ha realizado ningún cobro y esta entrada no es válida. Puedes volver a intentarlo cuando quieras." />;
+    const reason = ticket.cancel_reason as string | null;
+    if (reason === 'payment_failed') {
+      return <Message cta title="Pago no completado" text="El banco no ha autorizado el pago, así que no se te ha cobrado nada. Puedes volver a intentarlo con otra tarjeta." />;
+    }
+    if (reason === 'refunded') {
+      return <Message title="Entrada devuelta" text="Esta entrada se ha devuelto y el importe se reembolsará por el mismo medio de pago. Si tienes dudas, escríbenos." help={{ text: 'Cualquier duda, estamos en WhatsApp.', href: helpHref }} />;
+    }
+    if (reason === 'manual') {
+      return <Message title="Entrada anulada" text="Esta entrada ha sido anulada por el club. Si crees que es un error, escríbenos." help={{ text: 'Cuéntanos qué ha pasado.', href: helpHref }} />;
+    }
+    // Caducada sin recibir confirmación del banco (o anulaciones antiguas sin motivo): NO se puede asegurar que no se cobrara
+    return (
+      <Message
+        title="No hemos recibido tu pago"
+        text="No nos ha llegado la confirmación del banco y esta entrada no es válida todavía."
+        help={{ text: 'Si el banco SÍ te ha cobrado, no te preocupes: escríbenos con tu nombre y la hora del pago y te damos tu entrada o te devolvemos el dinero. No pagues otra vez.', href: helpHref }}
+        cta
+      />
+    );
   }
 
   const qrDataUrl = await QRCode.toDataURL(ticket.qr_code, {
@@ -54,6 +94,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
     color: { dark: '#0b0b0c', light: '#ffffff' }
   });
   const used = ticket.status === 'used';
+  const shareHref = whatsappLink(null, `Mi entrada de Coyote Club: ${url}`);
 
   return (
     <div style={shell}>
@@ -96,8 +137,14 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
         </div>
 
         <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>
-          Muestra este QR en la entrada. Guarda esta página o haz una captura de pantalla: no podemos enviártela por otro medio.
+          Muestra este QR en la entrada. <b style={{ color: 'var(--text)' }}>Guárdala ahora</b>: haz una captura o envíate el enlace, porque no podemos enviártela por otro medio.
         </div>
+        {!used && (
+          <div className="actions">
+            <a href={shareHref} target="_blank" rel="noopener" className="btn btn-sm">Enviármela por WhatsApp</a>
+            <CopyLink url={url} />
+          </div>
+        )}
       </div>
     </div>
   );

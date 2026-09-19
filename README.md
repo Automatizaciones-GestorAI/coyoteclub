@@ -57,5 +57,5 @@ escribir; la clave pública no puede nada. No añadas políticas sin pensarlo.
 
 ## Pendiente
 
-- Textos legales, envío de la entrada por email y botón de devoluciones (ver la guía de Redsys).
+- Textos legales y envío de la entrada por email (ver la guía de Redsys). Protocolo de puerta e incidencias: `docs/PUERTA-E-INCIDENCIAS.md`.
 - `/entradas` y la portada: maquetado ya adaptado a móvil.

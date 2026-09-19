@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { availability } from '@/lib/stock';
 import { getRedsysStatus } from '@/lib/redsys';
+import { getLastBankNotice, getReviewCount } from '@/lib/review';
 import AdminShell, { requireAdmin } from '../AdminShell';
 import LiveControls from './LiveControls';
 import SalesChart, { SalesDay } from './SalesChart';
@@ -93,6 +94,8 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     label: `${e.title} · ${dayLabel(e.event_date, { weekday: 'short', day: 'numeric', month: 'short' })}`
   }));
   const redsys = getRedsysStatus();
+  const [lastNotice, toReview] = await Promise.all([getLastBankNotice(), getReviewCount()]);
+  const noticeText = lastNotice ? new Date(lastNotice).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null;
 
   return (
     <AdminShell>
@@ -116,12 +119,20 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             {redsys.ok ? (
               <div style={{ color: 'var(--text-dim)' }}>
                 {redsys.mode === 'live' ? 'Los cobros son reales.' : 'Los cobros son de prueba: no se mueve dinero. Cuando el banco lo autorice, cambia REDSYS_ENV a live.'}
+                <br />
+                {noticeText ? `Último aviso recibido del banco: ${noticeText}.` : 'Todavía no ha llegado ningún aviso del banco: haz una compra de prueba para comprobar que las notificaciones llegan.'}
               </div>
             ) : (
               <div style={{ color: 'var(--text-dim)' }}>Falta configurar Redsys: {redsys.problems.join('; ')}. Hasta entonces nadie puede pagar online.</div>
             )}
           </div>
         </div>
+
+        {toReview > 0 && (
+          <a href="/admin/entradas" className="card" style={{ borderColor: 'rgba(255,77,77,0.6)', display: 'block', fontSize: 14 }}>
+            <b>⚠ Hay {toReview} {toReview === 1 ? 'cobro por revisar' : 'cobros por revisar'}.</b> <span style={{ color: 'var(--text-dim)' }}>Pulsa aquí para verlos en «Entradas».</span>
+          </a>
+        )}
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div className="label" style={{ margin: 0 }}>INGRESOS POR ENTRADAS</div>

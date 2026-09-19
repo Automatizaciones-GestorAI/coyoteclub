@@ -74,8 +74,12 @@ barato y devuélvela desde el módulo de administración de Redsys.
 
 ## Pendiente / limitaciones conocidas
 
-- **Devoluciones:** se hacen en el módulo de administración de Redsys; la web aún no tiene botón para marcar la
-  entrada como cancelada (hoy se haría a mano en la base de datos).
+- **Devoluciones:** el dinero se devuelve en el módulo de administración de Redsys y después se marca la entrada como
+  «Anular (devuelta en Redsys)» en la pantalla **Entradas** (ver `docs/PUERTA-E-INCIDENCIAS.md`). La web no mueve dinero.
+- **Comprobación automática contra el banco:** la web no puede preguntar a Redsys si un pedido está cobrado (el manual
+  oficial que hemos podido consultar no documenta esa consulta para este tipo de conexión). Por eso se guardan todos los
+  avisos, hay lista de «Por revisar» y en la puerta se comprueba el cargo en el móvil del cliente. Si el banco activa un
+  servicio de consulta, se puede añadir.
 - **El comprador solo recibe su entrada en pantalla** (no hay email/SMS): la página le pide guardar el enlace o
   hacer una captura. Un envío por email requiere contratar un servicio de correo.
 - **Textos legales** (punto 2).

@@ -5,13 +5,14 @@ import { usePathname, useRouter } from 'next/navigation';
 const items = [
   { href: '/admin', label: 'Resumen' },
   { href: '/admin/ventas', label: 'Ventas' },
+  { href: '/admin/entradas', label: 'Entradas' },
   { href: '/admin/events', label: 'Eventos' },
   { href: '/admin/pricing', label: 'Precios' },
   { href: '/admin/gallery', label: 'Galería' },
   { href: '/scan', label: 'Escanear QR' }
 ];
 
-export default function AdminNav() {
+export default function AdminNav({ alerts = 0 }: { alerts?: number }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -33,6 +34,9 @@ export default function AdminNav() {
             className={pathname === item.href ? 'admin-link active' : 'admin-link'}
           >
             {item.label}
+            {item.href === '/admin/entradas' && alerts > 0 && (
+              <span className="nav-alert" aria-label={`${alerts} por revisar`}>{alerts}</span>
+            )}
           </Link>
         ))}
       </div>
