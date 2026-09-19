@@ -4,6 +4,7 @@ import { esc, formatEventDate, formatPrice } from '@/lib/format';
 export const dynamic = 'force-dynamic';
 
 const ACCENT = '#ff149c';
+const MAP_QUERY = encodeURIComponent('Coyote Club, C. Trillo, 15, Seseña, Toledo');
 
 export default async function Home() {
   const [{ data: events }, { data: tiers }, { data: gallery }] = await Promise.all([
@@ -101,7 +102,7 @@ export default async function Home() {
       <line x1="1340" y1="-40" x2="1060" y2="680" stroke="${ACCENT}" stroke-width="1.5" opacity="0.18"></line>
     </svg>
     <div style="position: relative; z-index: 1; filter: drop-shadow(0 0 24px rgba(255,20,150,0.5));">
-      <video id="logo-matte-video" src="/video/logo-loop.mp4" autoplay muted playsinline style="position: absolute; top: 0; left: 0; height: 160px; width: auto; opacity: 0; pointer-events: none; z-index: -1;"></video>
+      <video id="logo-matte-video" src="/video/logo-loop.mp4" autoplay loop muted playsinline style="position: absolute; top: 0; left: 0; height: 160px; width: auto; opacity: 0; pointer-events: none; z-index: -1;"></video>
       <canvas id="logo-canvas" style="height: 160px; width: auto; display: block;"></canvas>
     </div>
     <div style="position: relative; z-index: 1; font-size: 15px; font-weight: 600; letter-spacing: 0.14em; color: ${ACCENT};">SESEÑA (TOLEDO) · VIERNES Y SÁBADOS</div>
@@ -222,10 +223,13 @@ export default async function Home() {
           <div style="font-size: 18px; color: var(--text);">+34 653 53 35 49</div>
         </div>
       </div>
-      <a href="https://wa.me/34653533549" class="btn" style="align-self: flex-start; margin-top: 8px; font-size: 15px; padding: 16px 30px;">ESCRÍBENOS POR WHATSAPP</a>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px;">
+        <a href="https://wa.me/34653533549" class="btn" style="font-size: 15px; padding: 16px 30px;">ESCRÍBENOS POR WHATSAPP</a>
+        <a href="https://www.google.com/maps/search/?api=1&amp;query=${MAP_QUERY}" target="_blank" rel="noopener" class="btn-outline" style="font-size: 15px; padding: 16px 30px;">ABRIR EN GOOGLE MAPS</a>
+      </div>
     </div>
-    <div style="display: flex; align-items: center; justify-content: center; border-radius: 20px; border: 1px dashed var(--line); background: var(--bg-card);">
-      <div style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim); text-align: center; padding: 0 24px;">[MAPA: Google Maps embebido]</div>
+    <div style="position: relative; min-height: 420px; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-card);">
+      <iframe title="Ubicación de Coyote Club en Google Maps" src="https://www.google.com/maps?q=${MAP_QUERY}&amp;output=embed&amp;hl=es" style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
   </div>
 
@@ -320,6 +324,9 @@ export default async function Home() {
         video.addEventListener('ended', function () {
           video.currentTime = 0;
           video.play().catch(function () {});
+        });
+        document.addEventListener('visibilitychange', function () {
+          if (!document.hidden && video.paused) video.play().catch(function () {});
         });
         draw();
       }
