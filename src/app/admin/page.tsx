@@ -1,6 +1,10 @@
 import { supabaseAdmin } from '@/lib/supabase';
+import AdminShell, { requireAdmin } from './AdminShell';
+
+export const dynamic = 'force-dynamic';
 
 export default async function AdminHome() {
+  await requireAdmin();
   const { count: eventsCount } = await supabaseAdmin
     .from('events')
     .select('*', { count: 'exact', head: true });
@@ -14,6 +18,7 @@ export default async function AdminHome() {
     .eq('status', 'used');
 
   return (
+    <AdminShell>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <h1 style={{ fontSize: 32, margin: 0 }}>Resumen</h1>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 700 }}>
@@ -31,5 +36,6 @@ export default async function AdminHome() {
         </div>
       </div>
     </div>
+    </AdminShell>
   );
 }
