@@ -1,6 +1,8 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import QRCode from 'qrcode';
 
+export const dynamic = 'force-dynamic';
+
 export default async function TicketPage({ params }: { params: { id: string } }) {
   const { data: ticket } = await supabaseAdmin
     .from('tickets')

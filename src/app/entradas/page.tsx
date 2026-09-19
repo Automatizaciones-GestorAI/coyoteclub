@@ -1,6 +1,8 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import EntradasClient from './EntradasClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EntradasPage() {
   const { data: tiers } = await supabaseAdmin
     .from('price_tiers')
