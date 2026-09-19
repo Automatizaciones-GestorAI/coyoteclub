@@ -1,11 +1,25 @@
 import { SignJWT, jwtVerify } from 'jose';
+import { createHash, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 const COOKIE_NAME = 'coyote_admin_session';
 
+let warnedWeakSecret = false;
 function getSecret() {
-  return new TextEncoder().encode(process.env.ADMIN_SESSION_SECRET!);
+  const secret = process.env.ADMIN_SESSION_SECRET || '';
+  if (secret.length < 32 && !warnedWeakSecret) {
+    warnedWeakSecret = true;
+    console.warn('[seguridad] ADMIN_SESSION_SECRET tiene menos de 32 caracteres: usa una cadena aleatoria larga (48+).');
+  }
+  return new TextEncoder().encode(secret);
+}
+
+// Comparación en tiempo constante (evita deducir la contraseña midiendo tiempos de respuesta).
+export function safeEqual(a: string, b: string): boolean {
+  const ha = createHash('sha256').update(a).digest();
+  const hb = createHash('sha256').update(b).digest();
+  return timingSafeEqual(ha, hb);
 }
 
 export async function createAdminSession() {
