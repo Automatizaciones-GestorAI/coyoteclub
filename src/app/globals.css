@@ -242,3 +242,6 @@ button { cursor: pointer; font-family: inherit; }
 .menu-pop > summary { list-style: none; cursor: pointer; }
 .menu-pop > summary::-webkit-details-marker { display: none; }
 .menu-pop .pop { position: absolute; z-index: 10; right: 0; top: calc(100% + 6px); min-width: 230px; display: flex; flex-direction: column; gap: 6px; padding: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+
+/* Fila de precios: última línea (subir/bajar y borrar) a todo el ancho */
+.pricing-row .span-all { grid-column: 1 / -1; }

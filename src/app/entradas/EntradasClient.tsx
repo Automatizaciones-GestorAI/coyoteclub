@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { formatPrice } from '@/lib/format';
 
 type Tier = {
   id: string;
@@ -101,7 +102,7 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
                 {tier.availability === 'low' && <span className="badge-low">Quedan pocas</span>}
               </div>
               <div className="display" style={{ fontSize: 44 }}>
-                {(tier.price_cents / 100).toFixed(2).replace('.00', '')} €
+                {formatPrice(tier.price_cents)}
               </div>
               <div style={{ fontSize: 14, color: 'var(--text-dim)' }}>{tier.description}</div>
             </div>
@@ -131,7 +132,7 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
             style={{ width: 'min(340px, 100%)', margin: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}
           >
             <div className="display" style={{ fontSize: 24 }}>
-              {openTier.label} — {(openTier.price_cents / 100).toFixed(2)} €
+              {openTier.label} — {formatPrice(openTier.price_cents)}
             </div>
             <div>
               <label className="label">Nombre</label>

@@ -16,7 +16,8 @@ export function formatEventDate(dateStr: string): string {
   return `${dia} · ${dd} ${meses[d.getMonth()]}`;
 }
 
+// Precio en castellano: "8 €", "12,50 €" (coma decimal, sin ceros de más)
 export function formatPrice(cents: number): string {
   const value = cents / 100;
-  return Number.isInteger(value) ? `${value} €` : `${value.toFixed(2)} €`;
+  return Number.isInteger(value) ? `${value} €` : `${value.toFixed(2).replace('.', ',')} €`;
 }
