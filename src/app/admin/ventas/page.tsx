@@ -153,6 +153,11 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{sold > 0 ? `${Math.round((entered / sold) * 100)}% de las vendidas` : '—'}</div>
           </div>
           <div className="card">
+            <div className="label">FALTAN POR ENTRAR</div>
+            <div className="display" style={{ fontSize: 40 }}>{sold - entered}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>Con entrada válida sin escanear</div>
+          </div>
+          <div className="card">
             <div className="label">PENDIENTES DE PAGO</div>
             <div className="display" style={{ fontSize: 40 }}>{pending}</div>
             <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>Se anulan solas si no pagan</div>

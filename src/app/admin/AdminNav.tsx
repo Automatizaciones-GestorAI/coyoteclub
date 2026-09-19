@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 const items = [
-  { href: '/admin', label: 'Resumen' },
   { href: '/admin/ventas', label: 'Ventas' },
   { href: '/admin/entradas', label: 'Entradas' },
   { href: '/admin/events', label: 'Eventos' },
