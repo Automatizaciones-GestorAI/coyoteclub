@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import QRCode from 'qrcode';
+import AutoRefresh from './AutoRefresh';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +16,8 @@ const shell = {
 function Message({ title, text, refresh, cta }: { title: string; text: string; refresh?: boolean; cta?: boolean }) {
   return (
     <div style={shell}>
-      {/* Mientras el banco no confirma, la página se recarga sola cada pocos segundos */}
-      {refresh && <meta httpEquiv="refresh" content="4" />}
+      {/* Mientras el banco no confirma, la página se actualiza sola cada pocos segundos */}
+      {refresh && <AutoRefresh />}
       <div className="card" style={{ width: 'min(340px, 100%)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <img src="/images/logo.png" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 70%)', height: 'auto', margin: '0 auto' }} />
         <div className="display" style={{ fontSize: 28 }}>{title}</div>
