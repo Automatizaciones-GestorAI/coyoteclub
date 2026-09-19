@@ -210,3 +210,23 @@ button { cursor: pointer; font-family: inherit; }
 @media (max-width: 600px) {
   .card { padding: 20px; border-radius: 16px; }
 }
+
+/* Tablas (panel de ventas) */
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th { text-align: left; color: var(--text-dim); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.table td { padding: 12px; border-bottom: 1px solid var(--line); }
+.table tr:last-child td { border-bottom: 0; }
+.table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* En móvil la tabla se apila: cada fila pasa a ser una tarjetita con sus etiquetas */
+@media (max-width: 600px) {
+  .table.stack thead { display: none; }
+  .table.stack, .table.stack tbody { display: block; }
+  .table.stack tr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .table.stack tr:last-child { border-bottom: 0; }
+  .table.stack td { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0; border: 0; }
+  .table.stack td::before { content: attr(data-label); color: var(--text-dim); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .table.stack .stack-title { grid-column: 1 / -1; font-weight: 700; font-size: 16px; }
+  .table.stack .stack-title::before { content: none; }
+}
