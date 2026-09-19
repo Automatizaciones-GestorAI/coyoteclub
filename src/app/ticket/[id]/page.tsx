@@ -30,11 +30,12 @@ function Message({ title, text, refresh, cta }: { title: string; text: string; r
   );
 }
 
-export default async function TicketPage({ params }: { params: { id: string } }) {
+export default async function TicketPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { data: ticket } = await supabaseAdmin
     .from('tickets')
     .select('*, events(title, event_date, event_time), price_tiers(label, description)')
-    .eq('qr_code', params.id)
+    .eq('qr_code', id)
     .single();
 
   if (!ticket) {

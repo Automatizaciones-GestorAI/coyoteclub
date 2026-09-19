@@ -29,7 +29,7 @@ export async function createAdminSession() {
     .setExpirationTime('30d')
     .sign(getSecret());
 
-  cookies().set(COOKIE_NAME, token, {
+  (await cookies()).set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
@@ -38,12 +38,12 @@ export async function createAdminSession() {
   });
 }
 
-export function clearAdminSession() {
-  cookies().delete(COOKIE_NAME);
+export async function clearAdminSession() {
+  (await cookies()).delete(COOKIE_NAME);
 }
 
 export async function isAdminAuthenticated(): Promise<boolean> {
-  const token = cookies().get(COOKIE_NAME)?.value;
+  const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return false;
   try {
     await jwtVerify(token, getSecret());

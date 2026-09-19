@@ -32,8 +32,9 @@ async function fetchTickets(eventId: string) {
   return rows;
 }
 
-export default async function SalesPage({ searchParams }: { searchParams: { event?: string } }) {
+export default async function SalesPage({ searchParams }: { searchParams: Promise<{ event?: string }> }) {
   await requireAdmin();
+  const { event: requested } = await searchParams;
 
   const [{ data: eventsData }, { data: tiersData }] = await Promise.all([
     supabaseAdmin.from('events').select('id,title,event_date,event_time').order('event_date', { ascending: false }).limit(40),
@@ -46,7 +47,6 @@ export default async function SalesPage({ searchParams }: { searchParams: { even
   const cutoff = madridDay(new Date(Date.now() - 12 * 3600 * 1000));
   const upcoming = events.filter((e) => e.event_date >= cutoff).sort((a, b) => a.event_date.localeCompare(b.event_date))[0];
   const fallback = (upcoming ?? events[0])?.id ?? 'all';
-  const requested = searchParams?.event;
   const selected = requested === 'all' || events.some((e) => e.id === requested) ? (requested as string) : fallback;
   const selectedEvent = events.find((e) => e.id === selected);
 

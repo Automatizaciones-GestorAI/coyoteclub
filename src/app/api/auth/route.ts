@@ -42,6 +42,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE() {
-  clearAdminSession();
+  await clearAdminSession();
   return NextResponse.json({ ok: true });
 }
