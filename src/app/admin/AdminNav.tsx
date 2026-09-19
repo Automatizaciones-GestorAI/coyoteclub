@@ -20,28 +20,22 @@ export default function AdminNav() {
   }
 
   return (
-    <nav style={{ width: 230, borderRight: '1px solid var(--line)', padding: '32px 22px', display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--bg-alt)' }}>
-      <div className="display" style={{ fontSize: 24, marginBottom: 28 }}>
-        COYOTE <span style={{ color: 'var(--accent)' }}>CLUB</span>
+    <nav className="admin-nav">
+      <Link href="/admin" className="admin-nav-logo" aria-label="Coyote Club - Panel">
+        <img src="/images/logo.png" alt="Coyote Club" />
+      </Link>
+      <div className="admin-nav-links">
+        {items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={pathname === item.href ? 'admin-link active' : 'admin-link'}
+          >
+            {item.label}
+          </Link>
+        ))}
       </div>
-      {items.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          style={{
-            padding: '11px 14px',
-            borderRadius: 10,
-            fontSize: 14,
-            fontWeight: 600,
-            transition: 'background 0.15s ease, color 0.15s ease',
-            background: pathname === item.href ? 'var(--bg-card)' : 'transparent',
-            color: pathname === item.href ? 'var(--accent)' : 'var(--text-dim)'
-          }}
-        >
-          {item.label}
-        </Link>
-      ))}
-      <button onClick={logout} className="btn-outline" style={{ marginTop: 24 }}>
+      <button onClick={logout} className="btn-outline admin-nav-logout">
         Cerrar sesión
       </button>
     </nav>

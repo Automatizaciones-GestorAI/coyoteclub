@@ -33,15 +33,15 @@ export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 700 }}>
         {tiers.map((tier) => (
-          <div key={tier.id} className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 100px', gap: 12, alignItems: 'end' }}>
-            <div>
+          <div key={tier.id} className="card pricing-row">
+            <div className="span-2">
               <label className="label">Etiqueta</label>
               <input
                 defaultValue={tier.label}
                 onBlur={(e) => updateTier(tier, { label: e.target.value })}
               />
             </div>
-            <div>
+            <div className="span-2">
               <label className="label">Descripción</label>
               <input
                 defaultValue={tier.description || ''}
@@ -58,8 +58,7 @@ export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }
               />
             </div>
             <button
-              className="btn-outline"
-              style={{ fontSize: 12, color: tier.is_active ? undefined : '#ff6b6b' }}
+              className={tier.is_active ? 'btn-outline btn-sm' : 'btn-outline btn-sm btn-danger'}
               onClick={() => updateTier(tier, { is_active: !tier.is_active })}
             >
               {tier.is_active ? 'Activo' : 'Oculto'}

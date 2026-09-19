@@ -44,15 +44,15 @@ export default function ScanClient() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 24, gap: 20, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 16px', gap: 20, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>
       <div className="display" style={{ fontSize: 28 }}>ESCANEAR ENTRADA</div>
-      <div id="qr-reader" style={{ width: 300, borderRadius: 16, overflow: 'hidden' }} />
+      <div id="qr-reader" style={{ width: 'min(320px, 100%)', borderRadius: 16, overflow: 'hidden' }} />
 
       {result && (
         <div
           className="card"
           style={{
-            width: 300,
+            width: 'min(320px, 100%)',
             textAlign: 'center',
             borderColor: result.valid ? '#2ecc71' : '#ff4d4d',
             background: result.valid ? 'rgba(46,204,113,0.1)' : 'rgba(255,77,77,0.1)'

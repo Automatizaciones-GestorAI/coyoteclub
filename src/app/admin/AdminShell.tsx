@@ -11,9 +11,9 @@ export async function requireAdmin() {
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex' }}>
+    <div className="admin-shell">
       <AdminNav />
-      <main style={{ flex: 1, padding: '32px 40px' }}>{children}</main>
+      <main className="admin-main">{children}</main>
     </div>
   );
 }

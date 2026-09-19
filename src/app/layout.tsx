@@ -1,7 +1,14 @@
 import './globals.css';
+import type { Viewport } from 'next';
 
 export const metadata = {
   title: 'Coyote Club',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#0b0b0c',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -67,24 +67,19 @@ export default function EntradasClient({ tiers, events }: { tiers: Tier[]; event
   }
 
   return (
-    <div style={{ minHeight: '100vh', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>
-      <div style={{ position: 'fixed', top: 20, left: 24 }}>
-      <a href="/" className="display" style={{ fontSize: 18 }}>
-        COYOTE <span style={{ color: 'var(--accent)' }}>CLUB</span>
-      </a>
-    </div>
-    <div style={{ textAlign: 'center' }}>
-        <div className="display" style={{ fontSize: 24, color: 'var(--text-dim)', marginBottom: 8 }}>
-          COYOTE <span style={{ color: 'var(--accent)' }}>CLUB</span>
-        </div>
-        <div className="display" style={{ fontSize: 48 }}>ENTRADAS</div>
+    <div style={{ minHeight: '100vh', padding: 'clamp(28px, 8vw, 64px) 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>
+      <div style={{ textAlign: 'center' }}>
+        <a href="/" aria-label="Coyote Club - Inicio" style={{ display: 'inline-block', marginBottom: 20 }}>
+          <img src="/images/logo.png" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 60vw)', height: 'auto' }} />
+        </a>
+        <div className="display" style={{ fontSize: 'clamp(38px, 11vw, 48px)' }}>ENTRADAS</div>
         <p style={{ color: 'var(--text-dim)', maxWidth: 480, margin: '12px auto 0' }}>
           Asegura tu entrada online. El precio sube según se acerca la fecha, así que cuanto antes
           la compres, menos pagas.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, width: '100%', maxWidth: 1100 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 20, width: '100%', maxWidth: 1100 }}>
         {tiers.map((tier) => (
           <div key={tier.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
@@ -110,14 +105,14 @@ export default function EntradasClient({ tiers, events }: { tiers: Tier[]; event
 
       {openTier && (
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', overflowY: 'auto', padding: 16, zIndex: 50 }}
           onClick={() => setOpenTier(null)}
         >
           <form
             onSubmit={submitPurchase}
             onClick={(e) => e.stopPropagation()}
             className="card"
-            style={{ width: 340, display: 'flex', flexDirection: 'column', gap: 14 }}
+            style={{ width: 'min(340px, 100%)', margin: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}
           >
             <div className="display" style={{ fontSize: 24 }}>
               {openTier.label} — {(openTier.price_cents / 100).toFixed(2)} €

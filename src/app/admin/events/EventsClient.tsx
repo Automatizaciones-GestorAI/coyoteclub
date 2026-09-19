@@ -62,7 +62,7 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       <h1 style={{ fontSize: 32, margin: 0 }}>Eventos</h1>
 
-      <form onSubmit={createEvent} className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 700 }}>
+      <form onSubmit={createEvent} className="card grid-2" style={{ maxWidth: 700 }}>
         <div>
           <label className="label">Título / noche</label>
           <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="DJ JUANJOOY" required />
@@ -87,12 +87,12 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
             <img src={form.poster_url} alt="preview" style={{ maxWidth: 160, marginTop: 10, borderRadius: 8 }} />
           )}
         </div>
-        <div style={{ gridColumn: '1 / -1' }}>
+        <div className="center-row" style={{ gridColumn: '1 / -1' }}>
           <button className="btn" type="submit">Crear evento</button>
         </div>
       </form>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: 16 }}>
         {events.map((evt) => (
           <div key={evt.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {evt.poster_url && (
@@ -103,11 +103,11 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
             <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
               {evt.event_date} {evt.event_time}
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn-outline" onClick={() => togglePublished(evt)} style={{ fontSize: 12 }}>
+            <div className="actions">
+              <button className="btn-outline btn-sm" onClick={() => togglePublished(evt)}>
                 {evt.is_published ? 'Publicado' : 'Oculto'}
               </button>
-              <button className="btn-outline" onClick={() => deleteEvent(evt.id)} style={{ fontSize: 12, color: '#ff6b6b' }}>
+              <button className="btn-outline btn-sm btn-danger" onClick={() => deleteEvent(evt.id)}>
                 Borrar
               </button>
             </div>

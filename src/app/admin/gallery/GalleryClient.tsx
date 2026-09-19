@@ -34,19 +34,16 @@ export default function GalleryClient({ initialImages }: { initialImages: Img[] 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <h1 style={{ fontSize: 32, margin: 0 }}>Galería</h1>
-      <div className="card" style={{ maxWidth: 400 }}>
+      <div className="card" style={{ maxWidth: 400, width: '100%' }}>
         <label className="label">Añadir foto</label>
         <input type="file" accept="image/*" onChange={(e) => e.target.files && uploadImage(e.target.files[0])} />
         {uploading && <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 6 }}>Subiendo…</div>}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 140px), 1fr))', gap: 12 }}>
         {images.map((img) => (
-          <div key={img.id} style={{ position: 'relative' }}>
+          <div key={img.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <img src={img.url} alt={img.alt || ''} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: 10 }} />
-            <button
-              onClick={() => deleteImage(img.id)}
-              style={{ position: 'absolute', top: 6, right: 6, background: '#0b0b0cdd', color: '#fff', border: 'none', borderRadius: 8, padding: '4px 8px', fontSize: 11 }}
-            >
+            <button className="btn-outline btn-sm btn-danger" onClick={() => deleteImage(img.id)}>
               Quitar
             </button>
           </div>

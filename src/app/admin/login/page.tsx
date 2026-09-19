@@ -33,15 +33,18 @@ export default function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        padding: 16,
         background:
           'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.18), transparent 55%), var(--bg)'
       }}
     >
-      <form onSubmit={handleSubmit} className="card" style={{ width: 340, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <form onSubmit={handleSubmit} className="card" style={{ width: 'min(340px, 100%)', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div style={{ textAlign: 'center' }}>
-          <div className="display" style={{ fontSize: 32 }}>
-            COYOTE <span style={{ color: 'var(--accent)' }}>CLUB</span>
-          </div>
+          <img
+            src="/images/logo.png"
+            alt="Coyote Club"
+            style={{ display: 'block', width: 'min(220px, 70%)', height: 'auto', margin: '0 auto 14px' }}
+          />
           <div style={{ color: 'var(--text-dim)', fontSize: 13, letterSpacing: '0.05em' }}>PANEL DE GESTIÓN</div>
         </div>
         <div>

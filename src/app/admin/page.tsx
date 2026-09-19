@@ -21,7 +21,7 @@ export default async function AdminHome() {
     <AdminShell>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <h1 style={{ fontSize: 32, margin: 0 }}>Resumen</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 700 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, maxWidth: 700 }}>
         <div className="card">
           <div className="label">EVENTOS ACTIVOS</div>
           <div className="display" style={{ fontSize: 40 }}>{eventsCount ?? 0}</div>

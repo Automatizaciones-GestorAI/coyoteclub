@@ -25,11 +25,11 @@ export default async function TicketPage({ params }: { params: { id: string } })
   });
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.16), transparent 55%), var(--bg)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.16), transparent 55%), var(--bg)' }}>
       <div
         className="card"
         style={{
-          width: 340,
+          width: 'min(340px, 100%)',
           textAlign: 'center',
           display: 'flex',
           flexDirection: 'column',
@@ -38,9 +38,7 @@ export default async function TicketPage({ params }: { params: { id: string } })
           boxShadow: '0 0 40px rgba(255,20,156,0.18)'
         }}
       >
-        <div className="display" style={{ fontSize: 30 }}>
-          COYOTE <span style={{ color: 'var(--accent)' }}>CLUB</span>
-        </div>
+        <img src="/images/logo.png" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 70%)', height: 'auto', margin: '0 auto' }} />
         <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>Seseña Viejo, Toledo</div>
 
         {ticket.status !== 'valid' && (
