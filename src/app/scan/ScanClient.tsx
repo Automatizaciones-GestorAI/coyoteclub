@@ -17,7 +17,7 @@ const BANK_TEXT: Record<string, string> = {
   amount_mismatch: 'importe distinto', not_found: 'pedido desconocido', ignored: 'ignorado', error: 'error'
 };
 
-export default function ScanClient() {
+export default function ScanClient({ canPanel = true }: { canPanel?: boolean }) {
   const scannerRef = useRef<any>(null);
   const busyRef = useRef(false); // evita procesar el mismo QR una y otra vez mientras sigue delante de la cámara
   const [result, setResult] = useState<Result | null>(null);
@@ -77,6 +77,7 @@ export default function ScanClient() {
       const res = await fetch('/api/admin/tickets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: t.id, action: 'let_in', note: 'Dada en la puerta tras ver el cargo en el móvil del cliente' }) });
       const json = await res.json();
       if (res.ok && (json.result === 'let_in' || json.result === 'let_in_oversold' || json.result === 'used')) setResult({ valid: true, letIn: true, ticket: t });
+      else if (json.result === 'not_allowed') setResult({ valid: false, reason: 'Esta entrada está anulada o devuelta: no le dejes pasar', ticket: t });
       else if (json.result === 'already_used') setResult({ valid: false, reason: 'Ya se usó esta entrada: no le dejes pasar', ticket: { ...t, status: 'used' } });
       else window.alert('No se ha podido dar entrada. Vuelve a intentarlo.');
     } catch {
@@ -89,7 +90,7 @@ export default function ScanClient() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 16px 40px', gap: 16, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>
       <div style={{ width: 'min(360px, 100%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-        <a href="/admin" className="btn-outline btn-sm">← Panel</a>
+        {canPanel ? <a href="/admin/ventas" className="btn-outline btn-sm">← Panel</a> : <a href="/admin/cuenta" className="btn-outline btn-sm">Mi cuenta</a>}
         <a href="/admin/entradas" className="btn-outline btn-sm">Buscar por nombre</a>
       </div>
       <div className="display" style={{ fontSize: 28 }}>ESCANEAR ENTRADA</div>
@@ -131,7 +132,7 @@ export default function ScanClient() {
             </div>
           )}
 
-          {!result.valid && t && t.status !== 'used' && (
+          {!result.valid && t && (t.status === 'pending' || (t.status === 'cancelled' && (!t.cancel_reason || t.cancel_reason === 'expired'))) && (
             <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.5 }}>
                 ¿Dice que ha pagado? Pídele que te enseñe en su app del banco el cargo de <b style={{ color: 'var(--text)' }}>{eur(t.amount_cents)}</b> a <b style={{ color: 'var(--text)' }}>COYOTE CLUB</b> de estos días.

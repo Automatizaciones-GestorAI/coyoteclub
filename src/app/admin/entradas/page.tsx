@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { CLUB_WHATSAPP, phoneToWhatsapp, siteBase, whatsappLink } from '@/lib/site';
 import { ANOMALY_TEXT, getReviewItems } from '@/lib/review';
-import AdminShell, { requireAdmin } from '../AdminShell';
+import AdminShell, { requireStaff } from '../AdminShell';
 import { ReviewActions, TicketActions } from './Actions';
 
 export const dynamic = 'force-dynamic';
@@ -23,11 +23,12 @@ const OUTCOME: Record<string, string> = {
 const AUDIT: Record<string, string> = { mark_paid: 'Dada por pagada a mano', cancel: 'Anulada', mark_used: 'Marcada como usada', let_in: 'Dada entrada a mano en la puerta' };
 
 export default async function EntradasPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
-  await requireAdmin();
+  const session = await requireStaff();
+  const isAdmin = session.role === 'admin';
   const { q = '', status = 'all' } = await searchParams;
   const clean = q.replace(/[^\p{L}\p{N} +.@_-]/gu, '').trim().slice(0, 40);
   const base = await siteBase();
-  const review = await getReviewItems();
+  const review = isAdmin ? await getReviewItems() : { expired: [], events: [], manual: [] };
   const reviewCount = review.expired.length + review.events.length + review.manual.length;
 
   let query = supabaseAdmin.from('tickets').select('*, events(title, event_date), price_tiers(label)').order('created_at', { ascending: false }).limit(60);
@@ -134,7 +135,7 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
                 Pedido <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{t.order_id ?? '—'}</span> · iniciada {when(t.created_at)}
               </div>
               <TicketActions
-                id={t.id} status={t.status} cancelReason={t.cancel_reason ?? null} viewUrl={viewUrl} amount={eur(t.amount_cents)}
+                id={t.id} role={session.role} status={t.status} cancelReason={t.cancel_reason ?? null} viewUrl={viewUrl} amount={eur(t.amount_cents)}
                 waUrl={waFor(t, `Hola ${(t.buyer_name ?? '').split(' ')[0]}, aquí tienes tu entrada de Coyote Club: ${viewUrl}`)}
               />
               <details>
@@ -144,7 +145,7 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
                   <span style={{ color: 'var(--text-dim)' }}>Importe esperado</span><span>{eur(t.amount_cents)}</span>
                   <span style={{ color: 'var(--text-dim)' }}>Iniciada</span><span>{when(t.created_at)}</span>
                   <span style={{ color: 'var(--text-dim)' }}>Cobro confirmado</span><span>{t.paid_at ? when(t.paid_at) : 'no'}</span>
-                  <span style={{ color: 'var(--text-dim)' }}>Entró</span><span>{t.used_at ? when(t.used_at) : 'no'}</span>
+                  <span style={{ color: 'var(--text-dim)' }}>Entró</span><span>{t.used_at ? `${when(t.used_at)}${t.used_by ? ` · escaneada por ${t.used_by}` : ''}` : 'no'}</span>
                   <span style={{ color: 'var(--text-dim)' }}>Avisos del banco</span>
                   <span>
                     {notes.length === 0 ? <b style={{ color: '#ffbe3c' }}>ninguno recibido</b> : notes.map((n: any, i: number) => (
@@ -153,7 +154,7 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
                   </span>
                   {log.length > 0 && (<>
                     <span style={{ color: 'var(--text-dim)' }}>Acciones del club</span>
-                    <span>{log.map((a: any, i: number) => (<span key={i} style={{ display: 'block' }}>{when(a.created_at)} · {AUDIT[a.action] ?? a.action}{a.detail?.note ? ` (${a.detail.note})` : ''}</span>))}</span>
+                    <span>{log.map((a: any, i: number) => (<span key={i} style={{ display: 'block' }}>{when(a.created_at)} · {AUDIT[a.action] ?? a.action}{a.actor ? ` · por ${a.actor}` : ''}{a.detail?.note ? ` (${a.detail.note})` : ''}</span>))}</span>
                   </>)}
                 </div>
               </details>

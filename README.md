@@ -19,7 +19,7 @@ entradas con QR y cobro por Redsys.
 
 ## Rutas
 
-- `/admin` — panel (pide contraseña en `/admin/login`)
+- `/admin` — panel (usuario y contraseña en `/admin/login`; cada persona tiene el suyo, con perfil Administrador o Puerta)
 - `/admin/events` — crear/editar/borrar eventos y su cartel
 - `/admin/pricing` — editar los tramos de precio (Bonocopas, Tramo 1, Tramo 2, Taquilla)
 - `/admin/gallery` — subir/quitar fotos de la galería
@@ -42,6 +42,17 @@ con las migraciones aplicadas: `events`, `price_tiers`, `gallery_images`,
 `tickets`. Los 4 tramos de precio actuales (Bonocopas 20€/3 consumiciones,
 Tramo 1 8€, Tramo 2 10€, Taquilla 15€) y los 2 eventos de esta semana ya están
 cargados como datos iniciales.
+
+## Usuarios y perfiles
+
+- **Administrador:** ve y cambia todo (ventas, entradas, eventos, precios, galería, escáner).
+- **Puerta:** solo escáner y buscar entradas (dar entrada); no ve ingresos ni toca precios.
+- El apartado **Usuarios** (crear, desactivar, cambiar contraseña o perfil) solo lo ve quien tiene el permiso «gestiona usuarios»
+  (GestorAI). Cada persona cambia su contraseña en **Mi cuenta**.
+- **Primer acceso tras desplegar:** entra con usuario `admin` y la contraseña de `ADMIN_PASSWORD`: crea el usuario inicial.
+  Después conviene cambiarla en Mi cuenta y crear los usuarios de cada persona.
+- Desactivar a alguien o cambiarle la contraseña cierra sus sesiones al instante. Siempre queda al menos un gestor activo.
+- Las acciones a mano (dar entrada, dar por pagada, anular…) y quién escaneó cada entrada quedan anotadas con el usuario.
 
 ## Cobro con Redsys
 

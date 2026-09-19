@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-const items = [
+const ADMIN_ITEMS = [
   { href: '/admin/ventas', label: 'Ventas' },
   { href: '/admin/entradas', label: 'Entradas' },
   { href: '/admin/events', label: 'Eventos' },
@@ -10,10 +10,15 @@ const items = [
   { href: '/admin/gallery', label: 'Galería' },
   { href: '/scan', label: 'Escanear QR' }
 ];
+const DOOR_ITEMS = [
+  { href: '/scan', label: 'Escanear QR' },
+  { href: '/admin/entradas', label: 'Entradas' }
+];
 
-export default function AdminNav({ alerts = 0 }: { alerts?: number }) {
+export default function AdminNav({ alerts = 0, role = 'admin', manager = false, name = '' }: { alerts?: number; role?: 'admin' | 'door'; manager?: boolean; name?: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const items = [...(role === 'door' ? DOOR_ITEMS : ADMIN_ITEMS), ...(manager ? [{ href: '/admin/usuarios', label: 'Usuarios' }] : []), { href: '/admin/cuenta', label: 'Mi cuenta' }];
 
   async function logout() {
     await fetch('/api/auth', { method: 'DELETE' });
@@ -22,7 +27,7 @@ export default function AdminNav({ alerts = 0 }: { alerts?: number }) {
 
   return (
     <nav className="admin-nav">
-      <Link href="/admin" className="admin-nav-logo" aria-label="Coyote Club - Panel">
+      <Link href={role === 'door' ? '/scan' : '/admin/ventas'} className="admin-nav-logo" aria-label="Coyote Club - Panel">
         <img src="/images/logo.png" alt="Coyote Club" />
       </Link>
       <div className="admin-nav-links">
@@ -38,6 +43,7 @@ export default function AdminNav({ alerts = 0 }: { alerts?: number }) {
             )}
           </Link>
         ))}
+        {name && <div className="admin-nav-user">{name} · {role === 'door' ? 'Puerta' : 'Administrador'}</div>}
       </div>
       <button onClick={logout} className="btn-outline admin-nav-logout">
         Cerrar sesión

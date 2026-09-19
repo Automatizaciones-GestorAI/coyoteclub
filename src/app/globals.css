@@ -245,3 +245,6 @@ button { cursor: pointer; font-family: inherit; }
 
 /* Fila de precios: última línea (subir/bajar y borrar) a todo el ancho */
 .pricing-row .span-all { grid-column: 1 / -1; }
+
+.admin-nav-user { font-size: 12px; color: var(--text-dim); padding: 14px 14px 0; line-height: 1.4; }
+@media (max-width: 820px) { .admin-nav-user { display: none; } }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,14 +16,16 @@ export default function LoginPage() {
     const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
+      body: JSON.stringify({ username, password })
     });
     setLoading(false);
+    let json: any = {};
+    try { json = await res.json(); } catch { /* respuesta que no es JSON */ }
     if (res.ok) {
-      router.push('/admin');
+      router.push(json.next || '/admin');
       router.refresh();
     } else {
-      setError('Contraseña incorrecta');
+      setError(json.error || 'No se pudo entrar. Inténtalo de nuevo.');
     }
   }
 
@@ -48,12 +51,28 @@ export default function LoginPage() {
           <div style={{ color: 'var(--text-dim)', fontSize: 13, letterSpacing: '0.05em' }}>PANEL DE GESTIÓN</div>
         </div>
         <div>
-          <label className="label">Contraseña</label>
+          <label className="label" htmlFor="username">Usuario</label>
           <input
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoFocus
+            required
+          />
+        </div>
+        <div>
+          <label className="label" htmlFor="password">Contraseña</label>
+          <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoFocus
+            autoComplete="current-password"
+            required
           />
         </div>
         {error && <div style={{ color: 'var(--accent)', fontSize: 13 }}>{error}</div>}

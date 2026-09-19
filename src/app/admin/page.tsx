@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation';
-import { requireAdmin } from './AdminShell';
+import { homeFor } from '@/lib/auth';
+import { requireStaff } from './AdminShell';
 
 export const dynamic = 'force-dynamic';
 
-// «Resumen» se ha fundido con «Ventas»: el inicio del panel es ahora la pantalla de ventas.
+// Cada perfil aterriza en lo suyo: la administración en Ventas y la puerta en el escáner.
 export default async function AdminHome() {
-  await requireAdmin();
-  redirect('/admin/ventas');
+  const s = await requireStaff();
+  redirect(homeFor(s));
 }

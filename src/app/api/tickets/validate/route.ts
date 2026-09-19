@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAdminAuthenticated } from '@/lib/auth';
+import { staffGuard } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
 const CANCEL_TEXT: Record<string, string> = {
@@ -19,8 +19,8 @@ function view(t: any) {
 }
 
 export async function POST(req: NextRequest) {
-  const authed = await isAdminAuthenticated();
-  if (!authed) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  const { session, denied } = await staffGuard();
+  if (denied) return denied;
 
   let qr_code: unknown;
   try {
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   // Se marca como usada solo si sigue "valid": si dos móviles la escanean a la vez, solo entra uno.
   const { data: updated, error: updError } = await supabaseAdmin
     .from('tickets')
-    .update({ status: 'used', used_at: new Date().toISOString() })
+    .update({ status: 'used', used_at: new Date().toISOString(), used_by: session.username })
     .eq('id', ticket.id)
     .eq('status', 'valid')
     .select('id');

@@ -1,7 +1,9 @@
 # Puerta e incidencias con pagos
 
 Qué hacer cuando algo no cuadra con un pago o con una entrada. Todo se resuelve desde el móvil, en el
-panel: **Escanear QR** (puerta) y **Entradas** (buscar, comprobar, reenviar, anular).
+panel: **Escanear QR** (puerta) y **Entradas** (buscar, comprobar, reenviar, anular). Cada persona entra con **su usuario**:
+el perfil **Puerta** puede escanear, buscar y dar entrada; anular, devolver, dar un cobro por bueno y la lista «Por revisar»
+son del perfil **Administrador**. Todo lo que se hace a mano queda anotado con el nombre de quien lo hizo.
 
 ## 1. En la puerta: la entrada sale en rojo
 
@@ -18,7 +20,7 @@ La pantalla roja dice el **motivo** y enseña nombre, teléfono, importe, númer
 **El QR no se lee o el cliente no lo encuentra:** pulsa **«Buscar por nombre»** (arriba en el escáner), escribe su
 nombre, teléfono o número de pedido y pulsa **«Dar entrada ahora»** en su ficha. También puedes **enviarle la entrada por WhatsApp**.
 
-Todo lo que des a mano queda **anotado** (hora y motivo) y aparece en «Por revisar» para comprobarlo después.
+Todo lo que des a mano queda **anotado** (hora, motivo y tu usuario). No se puede dar entrada a una entrada **devuelta o anulada** y aparece en «Por revisar» para comprobarlo después.
 
 ## 2. Al día siguiente: «Por revisar»
 

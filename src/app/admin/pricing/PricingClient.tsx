@@ -119,7 +119,7 @@ export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }
       )}
 
       <details className="card" style={{ maxWidth: 900 }} open={open} onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}>
-        <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>＋ Añadir un tramo nuevo</summary>
+        <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>+ Añadir un tramo nuevo</summary>
         <form onSubmit={addTier} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="grid-2">
             <div>

@@ -16,7 +16,7 @@ const MESSAGES: Record<string, string> = {
   marked_paid: 'Hecho: entrada dada por pagada.', marked_paid_oversold: 'Hecho, pero ya no quedaban plazas del tramo: revisa el aforo.',
   cancelled: 'Entrada anulada.', already: 'Ya estaba así.', used: 'Marcada como usada.', not_valid: 'No estaba válida.',
   let_in: 'Entrada dada a mano (queda por revisar).', let_in_oversold: 'Entrada dada a mano; ya no quedaban plazas del tramo.',
-  already_used: 'Ya había entrado con esta entrada.', reviewed: 'Marcado como revisado.', not_found: 'No se encontró.'
+  already_used: 'Ya había entrado con esta entrada.', not_allowed: 'Esta entrada está anulada o devuelta: no se puede dar entrada.', reviewed: 'Marcado como revisado.', not_found: 'No se encontró.'
 };
 
 function useAction() {
@@ -34,10 +34,13 @@ function useAction() {
   return { msg, busy, run };
 }
 
-export function TicketActions({ id, status, cancelReason, viewUrl, waUrl, amount }: { id: string; status: string; cancelReason: string | null; viewUrl: string; waUrl: string; amount: string }) {
+export function TicketActions({ id, role, status, cancelReason, viewUrl, waUrl, amount }: { id: string; role: 'admin' | 'door'; status: string; cancelReason: string | null; viewUrl: string; waUrl: string; amount: string }) {
   const { msg, busy, run } = useAction();
   const [copied, setCopied] = useState(false);
-  const canPay = status === 'pending' || (status === 'cancelled' && cancelReason !== 'refunded' && cancelReason !== 'manual');
+  const isAdmin = role === 'admin';
+  const canPay = isAdmin && (status === 'pending' || (status === 'cancelled' && cancelReason !== 'refunded' && cancelReason !== 'manual'));
+  // Dar entrada a mano: solo entradas válidas, pendientes o caducadas sin pago; nunca devueltas, anuladas o rechazadas
+  const canLetIn = status === 'pending' || status === 'valid' || (status === 'cancelled' && (!cancelReason || cancelReason === 'expired'));
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="actions" style={{ justifyContent: 'flex-start' }}>
@@ -54,10 +57,10 @@ export function TicketActions({ id, status, cancelReason, viewUrl, waUrl, amount
         {status !== 'used' && status !== 'valid' && canPay && (
           <button className="btn btn-sm" disabled={busy} onClick={() => run(id, 'mark_paid', `¿Has comprobado en Redsys que SÍ se cobraron ${amount}? La entrada pasará a válida y el cliente podrá verla.`)}>Sí cobró: dar entrada válida</button>
         )}
-        {status !== 'used' && status !== 'cancelled' && (
+        {canLetIn && (
           <button className="btn-outline btn-sm" disabled={busy} onClick={() => run(id, 'let_in', `¿Dar entrada ahora en la puerta? Quedará anotada para revisar el cobro después.`, 'Dada a mano desde la ficha')}>Dar entrada ahora</button>
         )}
-        {status !== 'used' && status !== 'cancelled' && (
+        {isAdmin && status !== 'used' && status !== 'cancelled' && (
           <details className="menu-pop">
             <summary className="btn-outline btn-sm btn-danger">Anular…</summary>
             <div className="pop">
