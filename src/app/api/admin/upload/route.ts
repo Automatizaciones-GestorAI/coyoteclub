@@ -1,8 +1,11 @@
+import { adminGuard } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 // Sube un fichero (cartel de evento o foto de galería) al bucket público "media"
 export async function POST(req: NextRequest) {
+  const denied = await adminGuard();
+  if (denied) return denied;
   const formData = await req.formData();
   const file = formData.get('file') as File | null;
   const folder = (formData.get('folder') as string) || 'misc';

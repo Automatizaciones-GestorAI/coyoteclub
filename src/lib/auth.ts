@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 const COOKIE_NAME = 'coyote_admin_session';
 
@@ -36,4 +37,10 @@ export async function isAdminAuthenticated(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// Para las rutas /api/admin/*: devuelve una respuesta 401 si no hay sesión de admin, o null si la hay.
+export async function adminGuard(): Promise<NextResponse | null> {
+  if (await isAdminAuthenticated()) return null;
+  return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 }
