@@ -43,14 +43,19 @@ con las migraciones aplicadas: `events`, `price_tiers`, `gallery_images`,
 Tramo 1 8€, Tramo 2 10€, Taquilla 15€) y los 2 eventos de esta semana ya están
 cargados como datos iniciales.
 
-## Pendiente para producción
+## Cobro con Redsys
 
-- El checkout de Redsys (`/api/checkout/redsys/create`) crea la entrada como
-  "valid" antes de confirmar el pago, para simplificar el ejemplo. Antes de
-  cobrar de verdad, cambia esto a estado `pending` hasta que llegue la
-  notificación de Redsys (`/api/checkout/redsys/notify`), que es quien de
-  verdad confirma el cobro.
-- La página `/entradas` ya está construida y conectada al backend. Le falta
-  el maquetado final a juego con el resto de la web (ahora mismo usa los
-  mismos estilos base de `globals.css`, pero no el hero ni la nav) — dime
-  cuando quieras que la deje calcada al diseño de Claude Design.
+Ya está preparado de punta a punta (entrada pendiente → aviso firmado de Redsys → entrada válida con QR,
+caducidad de reservas, control de aforo por tramo). Guía para activarlo con los datos del banco:
+[`docs/PUESTA-EN-MARCHA-REDSYS.md`](docs/PUESTA-EN-MARCHA-REDSYS.md).
+
+## Base de datos
+
+Los cambios de esquema están en `supabase/migrations/` (aplicados en producción). Todas las tablas tienen la
+seguridad por filas activada y **sin políticas**: solo el servidor (clave `service_role`/secreta) puede leer y
+escribir; la clave pública no puede nada. No añadas políticas sin pensarlo.
+
+## Pendiente
+
+- Textos legales, envío de la entrada por email y botón de devoluciones (ver la guía de Redsys).
+- `/entradas` y la portada: maquetado ya adaptado a móvil.

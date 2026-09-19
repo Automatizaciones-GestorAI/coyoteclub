@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { esc, formatEventDate, formatPrice } from '@/lib/format';
 import { availability } from '@/lib/stock';
+import { expirePending } from '@/lib/stock-db';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +9,7 @@ const ACCENT = '#ff149c';
 const MAP_QUERY = encodeURIComponent('Coyote Club, C. Trillo, 15, Seseña, Toledo');
 
 export default async function Home() {
+  await expirePending();
   const [{ data: events }, { data: tiers }, { data: gallery }] = await Promise.all([
     supabaseAdmin
       .from('events')

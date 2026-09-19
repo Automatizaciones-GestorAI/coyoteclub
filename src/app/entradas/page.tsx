@@ -1,10 +1,12 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import EntradasClient from './EntradasClient';
 import { availability } from '@/lib/stock';
+import { expirePending } from '@/lib/stock-db';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EntradasPage() {
+export default async function EntradasPage({ searchParams }: { searchParams: { pago?: string } }) {
+  await expirePending(); // libera plazas de compras abandonadas
   const { data: tiers } = await supabaseAdmin
     .from('price_tiers')
     .select('*')
@@ -23,5 +25,5 @@ export default async function EntradasPage() {
     availability: availability({ kind: tier.kind, stock })
   }));
 
-  return <EntradasClient tiers={publicTiers} events={events || []} />;
+  return <EntradasClient tiers={publicTiers} events={events || []} paymentFailed={searchParams?.pago === 'ko'} />;
 }

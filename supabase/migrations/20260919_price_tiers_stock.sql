@@ -10,6 +10,7 @@ alter table public.price_tiers
 create or replace function public.reserve_ticket_stock(p_tier uuid)
 returns boolean
 language plpgsql
+set search_path = ''
 as $$
 begin
   update public.price_tiers
@@ -24,6 +25,7 @@ $$;
 create or replace function public.release_ticket_stock(p_tier uuid)
 returns void
 language sql
+set search_path = ''
 as $$
   update public.price_tiers set stock = stock + 1 where id = p_tier and stock is not null;
 $$;

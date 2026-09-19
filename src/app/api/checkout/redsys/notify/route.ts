@@ -1,31 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { verifyRedsysNotification } from '@/lib/redsys';
-import crypto from 'crypto';
+import { getRedsysConfig, pick, verifyRedsysNotification } from '@/lib/redsys';
 
-// Redsys llama a esta URL en segundo plano (server-to-server) tras el intento de pago.
+// Redsys llama a esta URL en segundo plano (servidor a servidor) tras cada intento de pago.
+// Solo se hace caso a notificaciones con firma válida. Siempre se responde 200 cuando la firma es
+// correcta (Redsys reintenta si no); si falla la base de datos se responde 500 para que reintente.
 export async function POST(req: NextRequest) {
-  const form = await req.formData();
-  const merchantParams = form.get('Ds_MerchantParameters') as string;
-  const signature = form.get('Ds_Signature') as string;
+  let merchantParams = '';
+  let signature = '';
+  try {
+    const form = await req.formData();
+    merchantParams = String(form.get('Ds_MerchantParameters') ?? '');
+    signature = String(form.get('Ds_Signature') ?? '');
+  } catch {
+    return NextResponse.json({ error: 'Petición no válida' }, { status: 400 });
+  }
 
-  const decoded = verifyRedsysNotification(merchantParams, signature);
+  let config;
+  try {
+    config = getRedsysConfig();
+  } catch (e) {
+    console.error('[notify] Redsys sin configurar, no se puede verificar la firma');
+    return NextResponse.json({ error: 'No disponible' }, { status: 503 });
+  }
+
+  const decoded = verifyRedsysNotification(config, merchantParams, signature);
   if (!decoded) {
+    console.warn('[notify] notificación con firma inválida descartada');
     return NextResponse.json({ error: 'Firma inválida' }, { status: 400 });
   }
 
-  const orderId = decoded.Ds_Order;
-  const responseCode = parseInt(decoded.Ds_Response, 10);
-  const paid = responseCode >= 0 && responseCode <= 99; // 0-99 = autorizado, según Redsys
+  const orderId = pick(decoded, 'Ds_Order') as string;
+  const amount = parseInt(pick(decoded, 'Ds_Amount') ?? '', 10);
+  const code = parseInt(pick(decoded, 'Ds_Response') ?? '', 10);
+  const currency = pick(decoded, 'Ds_Currency');
+  const paid = Number.isInteger(code) && code >= 0 && code <= 99; // 0000-0099 = autorizada, según Redsys
 
+  let outcome: unknown;
   if (paid) {
-    // Pago confirmado: generamos el código QR definitivo para esta entrada
-    const finalQr = crypto.randomBytes(16).toString('hex');
-    await supabaseAdmin.from('tickets').update({ qr_code: finalQr }).eq('qr_code', orderId);
+    if (currency && currency !== '978') {
+      console.error('[notify] moneda inesperada', { orderId, currency });
+      return new NextResponse('OK', { status: 200 });
+    }
+    const { data, error } = await supabaseAdmin.rpc('confirm_ticket_payment', {
+      p_order: orderId,
+      p_amount: Number.isInteger(amount) ? amount : -1
+    });
+    if (error) {
+      console.error('[notify] error confirmando el pago', { orderId, message: error.message });
+      return NextResponse.json({ error: 'Error interno' }, { status: 500 });
+    }
+    outcome = data;
   } else {
-    // Pago rechazado: anulamos la entrada provisional
-    await supabaseAdmin.from('tickets').update({ status: 'cancelled' }).eq('qr_code', orderId);
+    const { data, error } = await supabaseAdmin.rpc('fail_ticket_payment', { p_order: orderId });
+    if (error) {
+      console.error('[notify] error anulando la entrada', { orderId, message: error.message });
+      return NextResponse.json({ error: 'Error interno' }, { status: 500 });
+    }
+    outcome = data;
   }
+
+  const logLine = JSON.stringify({ evt: 'redsys_notify', orderId, paid, code, amount, outcome });
+  // Estos resultados necesitan revisión humana (cobro que no cuadra o entrega sin plaza)
+  if (outcome === 'amount_mismatch' || outcome === 'reactivated_oversold' || outcome === 'not_found') console.error(logLine);
+  else console.log(logLine);
 
   return new NextResponse('OK', { status: 200 });
 }

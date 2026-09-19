@@ -24,3 +24,14 @@ export async function releaseStock(tierId: string): Promise<void> {
   const { error } = await supabaseAdmin.rpc('release_ticket_stock', { p_tier: tierId });
   if (error && error.code !== FUNCTION_MISSING) console.error('No se pudo devolver la entrada al tramo', tierId, error.message);
 }
+
+// Anula las entradas que llevan demasiado rato sin pagarse y devuelve su plaza al tramo.
+// Se llama al mostrar la portada, /entradas y al iniciar una compra; como mucho una vez por minuto.
+let lastExpire = 0;
+export async function expirePending(force = false, minutes = 20): Promise<void> {
+  const now = Date.now();
+  if (!force && now - lastExpire < 60_000) return;
+  lastExpire = now;
+  const { error } = await supabaseAdmin.rpc('expire_pending_tickets', { p_minutes: minutes });
+  if (error && error.code !== FUNCTION_MISSING) console.error('No se pudieron caducar las entradas pendientes', error.message);
+}

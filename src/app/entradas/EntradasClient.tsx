@@ -12,7 +12,7 @@ type Tier = {
 };
 type Evt = { id: string; title: string; event_date: string; event_time: string | null };
 
-export default function EntradasClient({ tiers, events }: { tiers: Tier[]; events: Evt[] }) {
+export default function EntradasClient({ tiers, events, paymentFailed }: { tiers: Tier[]; events: Evt[]; paymentFailed?: boolean }) {
   const [openTier, setOpenTier] = useState<Tier | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -44,11 +44,16 @@ export default function EntradasClient({ tiers, events }: { tiers: Tier[]; event
         buyer_phone: phone
       })
     });
-    const json = await res.json();
+    let json: any = {};
+    try {
+      json = await res.json();
+    } catch {
+      /* respuesta que no es JSON: se muestra el mensaje genérico */
+    }
     setLoading(false);
 
     if (!res.ok) {
-      setError(json.error || 'No se pudo iniciar el pago');
+      setError(json.error || 'No se pudo iniciar el pago. Inténtalo de nuevo en unos minutos.');
       return;
     }
 
@@ -74,6 +79,11 @@ export default function EntradasClient({ tiers, events }: { tiers: Tier[]; event
           <img src="/images/logo.png" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 60vw)', height: 'auto' }} />
         </a>
         <div className="display" style={{ fontSize: 'clamp(38px, 11vw, 48px)' }}>ENTRADAS</div>
+        {paymentFailed && (
+          <div role="alert" style={{ margin: '16px auto 0', maxWidth: 480, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,107,107,0.5)', background: 'rgba(255,107,107,0.1)', color: '#ff9b9b', fontSize: 14, lineHeight: 1.5 }}>
+            El pago no se ha completado y no se ha cobrado nada. Puedes volver a intentarlo cuando quieras.
+          </div>
+        )}
         <p style={{ color: 'var(--text-dim)', maxWidth: 480, margin: '12px auto 0' }}>
           Asegura tu entrada online. El precio sube según se acerca la fecha, así que cuanto antes
           la compres, menos pagas.
@@ -134,8 +144,8 @@ export default function EntradasClient({ tiers, events }: { tiers: Tier[]; event
             {events.length > 0 && (
               <div>
                 <label className="label">Noche</label>
-                <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
-                  <option value="">— General —</option>
+                <select value={eventId} onChange={(e) => setEventId(e.target.value)} required>
+                  <option value="" disabled>Elige la noche</option>
                   {events.map((ev) => (
                     <option key={ev.id} value={ev.id}>
                       {ev.title} ({ev.event_date})
