@@ -114,8 +114,11 @@ export default async function Home() {
       <line x1="1340" y1="-40" x2="1060" y2="680" stroke="${ACCENT}" stroke-width="1.5" opacity="0.18"></line>
     </svg>
     <div style="position: relative; z-index: 1; filter: drop-shadow(0 0 24px rgba(255,20,150,0.5));">
-      <video id="logo-matte-video" src="/video/logo-loop.mp4" autoplay loop muted playsinline style="position: absolute; top: 0; left: 0; width: min(665px, calc(100vw - 2 * var(--px))); height: auto; opacity: 0; pointer-events: none; z-index: -1;"></video>
-      <canvas id="logo-canvas" style="width: min(665px, calc(100vw - 2 * var(--px))); height: auto; display: block;"></canvas>
+      <div id="logo-box" style="position: relative; width: min(665px, calc(100vw - 2 * var(--px)));">
+        <video id="logo-matte-video" src="/video/logo-loop.mp4" autoplay loop muted playsinline preload="auto" aria-hidden="true" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; z-index: -1;"></video>
+        <canvas id="logo-canvas" width="640" height="154" role="img" aria-label="Coyote Club" style="width: 100%; height: auto; display: block;"></canvas>
+        <img class="logo-fallback" src="/images/logo.png" alt="" aria-hidden="true">
+      </div>
     </div>
     <div style="position: relative; z-index: 1; font-size: clamp(12px, 3.4vw, 15px); font-weight: 600; letter-spacing: 0.14em; color: ${ACCENT};">SESEÑA (TOLEDO) · VIERNES Y SÁBADOS</div>
     <h1 style="position: relative; z-index: 1; margin: 0; font-size: clamp(42px, 13vw, 100px); line-height: 0.95; max-width: 900px; color: var(--text);">LA MEJOR<br>SALA DE LA ZONA</h1>
@@ -282,6 +285,9 @@ export default async function Home() {
   const pageCss = `
     :root{--px:clamp(20px,5vw,64px);}
     [id]{scroll-margin-top:72px;}
+    /* Misma posición y tamaño que el logo dentro del fotograma del vídeo, para que el cambio no dé salto */
+    .logo-fallback{position:absolute;left:22%;top:12.3%;width:56.4%;height:71.5%;object-fit:contain;transition:opacity .5s ease;pointer-events:none;}
+    .logo-live .logo-fallback{opacity:0;}
     .nav-links{display:flex;align-items:center;gap:clamp(24px,3vw,40px);}
     .nav-toggle,.nav-burger{display:none;}
     .stats{width:100%;box-sizing:border-box;padding:32px var(--px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg-alt);}
@@ -359,40 +365,68 @@ export default async function Home() {
 
       var video = document.getElementById('logo-matte-video');
       var canvas = document.getElementById('logo-canvas');
-      if (video && canvas && canvas.getContext) {
+      var box = document.getElementById('logo-box');
+      if (video && canvas && box && canvas.getContext) {
         var ctx = canvas.getContext('2d');
         var off = document.createElement('canvas');
-        var offCtx = off.getContext('2d');
+        var offCtx = off.getContext('2d', { willReadFrequently: true });
+        var out = null;
+        var lastT = -1;
+        var live = false;
+        function tryPlay() {
+          video.muted = true;
+          var p = video.play();
+          if (p && p.catch) p.catch(function () {});
+        }
         function draw() {
           requestAnimationFrame(draw);
-          if (!video.videoWidth || video.readyState < 2) return;
+          // Mientras el vídeo no esté reproduciéndose (autoplay bloqueado, ahorro de batería...) se ve el logo estático.
+          var playing = !video.paused && !video.ended && video.currentTime > 0;
+          if (playing !== live) { live = playing; box.classList.toggle('logo-live', live); }
+          if (document.hidden || !video.videoWidth || video.readyState < 2) return;
+          if (video.currentTime === lastT) return; // no hay fotograma nuevo: no se repinta
+          lastT = video.currentTime;
           var w = video.videoWidth;
           var fullH = video.videoHeight;
           var h = fullH / 2;
-          if (off.width !== w || off.height !== fullH) {
+          if (!out || off.width !== w || off.height !== fullH) {
             off.width = w; off.height = fullH;
             canvas.width = w; canvas.height = h;
+            out = ctx.createImageData(w, h);
           }
           offCtx.drawImage(video, 0, 0, w, fullH);
-          var colorData = offCtx.getImageData(0, 0, w, h);
-          var alphaData = offCtx.getImageData(0, h, w, h);
-          var out = ctx.createImageData(w, h);
-          for (var i = 0; i < colorData.data.length; i += 4) {
-            out.data[i] = colorData.data[i];
-            out.data[i + 1] = colorData.data[i + 1];
-            out.data[i + 2] = colorData.data[i + 2];
-            out.data[i + 3] = alphaData.data[i];
+          var src = offCtx.getImageData(0, 0, w, fullH).data;
+          var dst = out.data;
+          var half = w * h * 4;
+          for (var i = 0; i < half; i += 4) {
+            dst[i] = src[i];
+            dst[i + 1] = src[i + 1];
+            dst[i + 2] = src[i + 2];
+            dst[i + 3] = src[i + half];
           }
           ctx.putImageData(out, 0, 0);
         }
-        video.play().catch(function () {});
+        // Algunos móviles (iPhone en ahorro de batería, ahorro de datos...) bloquean el autoplay hasta que se toca la pantalla.
+        var gestures = ['touchend', 'pointerup', 'click', 'keydown'];
+        function onGesture() { if (video.paused) tryPlay(); }
+        gestures.forEach(function (ev) { window.addEventListener(ev, onGesture, { passive: true }); });
+        video.addEventListener('playing', function () {
+          gestures.forEach(function (ev) { window.removeEventListener(ev, onGesture); });
+        });
+        video.addEventListener('canplay', function () { if (video.paused) tryPlay(); });
         video.addEventListener('ended', function () {
           video.currentTime = 0;
-          video.play().catch(function () {});
+          tryPlay();
         });
         document.addEventListener('visibilitychange', function () {
-          if (!document.hidden && video.paused) video.play().catch(function () {});
+          if (!document.hidden && video.paused) tryPlay();
         });
+        if (window.IntersectionObserver) {
+          new IntersectionObserver(function (entries) {
+            if (entries[0].isIntersecting && video.paused) tryPlay();
+          }).observe(box);
+        }
+        tryPlay();
         draw();
       }
     })();
