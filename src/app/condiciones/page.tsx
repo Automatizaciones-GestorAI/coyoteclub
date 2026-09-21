@@ -2,6 +2,8 @@ import { LEGAL } from '@/lib/legal';
 import { F } from '../_legal/Bits';
 import { LegalLayout } from '../_legal/LegalLayout';
 
+export const dynamic = 'force-dynamic'; // los datos del titular se leen del entorno en cada visita
+
 export const metadata = { title: 'Condiciones de compra · Coyote Club' };
 
 export default function Condiciones() {

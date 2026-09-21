@@ -14,20 +14,32 @@ incluido», logos Visa/Mastercard, enlaces legales en el pie, en `/entradas` y e
 
 ## Qué datos hay que pedirle al cliente (titular del negocio)
 
-Se rellenan en **`src/lib/legal.ts`** (los huecos salen en las páginas como «[COMPLETAR: …]» y el panel, en **Ventas**,
-avisa de lo que falta):
+Se ponen como **variables de entorno en EasyPanel** (servicio `coyote-club / web` → Entorno), **no en el código**: son datos personales y el
+repositorio de GitHub es público. Mientras una variable esté vacía, la página muestra «[COMPLETAR: …]» y el panel (**Ventas**) avisa de lo que falta.
+Después de cambiarlas hay que **desplegar**.
+
+| Variable | Contenido |
+|---|---|
+| `LEGAL_HOLDER_NAME` | Nombre y apellidos (autónomo) o razón social |
+| `LEGAL_HOLDER_TAX_ID` | NIF / CIF |
+| `LEGAL_HOLDER_ADDRESS` | Domicilio fiscal completo |
+| `LEGAL_HOLDER_EMAIL` | Email de contacto (también para ejercer los derechos de protección de datos) |
+| `LEGAL_HOLDER_REGISTRY` | Solo sociedades: Registro Mercantil (vacía si es autónomo) |
+| `LEGAL_CONFIRMED` | `true` cuando el titular o su gestor hayan revisado los textos |
+
+Qué hay que reunir:
 
 1. **Nombre y apellidos o razón social** de quien vende (el titular de la cuenta de Stripe).
 2. **NIF / CIF.**
 3. **Domicilio** fiscal completo.
 4. **Email** de contacto (también sirve para ejercer los derechos de protección de datos).
-5. Solo si es una **sociedad**: datos del Registro Mercantil (`holderRegistry`).
-6. Confirmar tres decisiones del negocio (hoy hay valores por defecto): **edad mínima** (`minAge`, 18), **plazo para devolver
+5. Solo si es una **sociedad**: datos del Registro Mercantil (`LEGAL_HOLDER_REGISTRY`).
+6. Confirmar tres decisiones del negocio (hoy hay valores por defecto): **edad mínima** (`minAge` en `src/lib/legal.ts`, 18), **plazo para devolver
    el importe si se cancela un evento** (`refundDays`, 14 días) y la **política de devoluciones** de `/condiciones`
    (solo si se cancela o cambia el evento, o hay un cobro duplicado).
-7. Cuando el titular o su gestor hayan revisado los textos: `holderConfirmed: true`.
+7. Cuando el titular o su gestor hayan revisado los textos: `LEGAL_CONFIRMED=true`.
 
-Si cambia cualquier texto o dato importante, sube la fecha de `version` (formato `AAAA-MM-DD`): se guarda con cada compra.
+Si cambia cualquier texto importante, sube la fecha de `version` en `src/lib/legal.ts` (formato `AAAA-MM-DD`): se guarda con cada compra.
 
 ## Qué debe revisar un gestor o abogado
 
