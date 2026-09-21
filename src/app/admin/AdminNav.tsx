@@ -28,7 +28,7 @@ export default function AdminNav({ alerts = 0, role = 'admin', manager = false, 
   return (
     <nav className="admin-nav">
       <Link href={role === 'door' ? '/scan' : '/admin/ventas'} className="admin-nav-logo" aria-label="Coyote Club - Panel">
-        <img src="/images/logo.png" alt="Coyote Club" />
+        <img src="/images/logo.webp" alt="Coyote Club" />
       </Link>
       <div className="admin-nav-links">
         {items.map((item) => (

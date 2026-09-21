@@ -78,7 +78,7 @@ export default function EntradasClient({ tiers, events, paymentFailed, paymentUn
     <div style={{ minHeight: '100vh', padding: 'clamp(28px, 8vw, 64px) 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>
       <div style={{ textAlign: 'center' }}>
         <a href="/" aria-label="Coyote Club - Inicio" style={{ display: 'inline-block', marginBottom: 20 }}>
-          <img src="/images/logo.png" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 60vw)', height: 'auto' }} />
+          <img src="/images/logo.webp" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 60vw)', height: 'auto' }} />
         </a>
         <div className="display" style={{ fontSize: 'clamp(38px, 11vw, 48px)' }}>ENTRADAS</div>
         {paymentUnknown && (

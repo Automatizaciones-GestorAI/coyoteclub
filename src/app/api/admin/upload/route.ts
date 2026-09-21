@@ -1,8 +1,13 @@
 import { adminGuard } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { optimizeUpload } from '@/lib/image';
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB (el bucket también lo exige)
+export const runtime = 'nodejs'; // sharp necesita Node
+
+// Lo que se ACEPTA de entrada (las fotos de móvil suelen pesar 5-10 MB). Lo que se GUARDA se reduce mucho: siempre queda muy por debajo
+// del límite de 5 MB del bucket.
+const MAX_BYTES = 15 * 1024 * 1024;
 const FOLDERS = new Set(['posters', 'gallery', 'misc']);
 
 // Formato real del archivo según sus primeros bytes (no nos fiamos del nombre ni del tipo declarado).
@@ -29,15 +34,24 @@ export async function POST(req: NextRequest) {
   const requestedFolder = String(formData.get('folder') || 'misc');
   const folder = FOLDERS.has(requestedFolder) ? requestedFolder : 'misc';
   if (!(file instanceof File)) return NextResponse.json({ error: 'Falta el archivo' }, { status: 400 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'La imagen pesa más de 5 MB' }, { status: 413 });
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'La imagen pesa más de 15 MB' }, { status: 413 });
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const kind = sniff(buffer);
   if (!kind) return NextResponse.json({ error: 'Solo se admiten imágenes JPG, PNG, WEBP o GIF' }, { status: 415 });
 
-  const path = `${folder}/${crypto.randomUUID()}.${kind.ext}`;
-  const { error } = await supabaseAdmin.storage.from('media').upload(path, buffer, {
-    contentType: kind.mime,
+  // Se reduce y se guarda como WebP (la web carga mucho más rápido). Si la imagen está dañada, se rechaza.
+  let optimized: Buffer;
+  try {
+    optimized = await optimizeUpload(buffer);
+  } catch (e) {
+    console.error('[upload] no se pudo procesar la imagen:', (e as Error).message);
+    return NextResponse.json({ error: 'No se ha podido leer la imagen. Prueba con otra (JPG o PNG).' }, { status: 415 });
+  }
+
+  const path = `${folder}/${crypto.randomUUID()}.webp`;
+  const { error } = await supabaseAdmin.storage.from('media').upload(path, optimized, {
+    contentType: 'image/webp',
     upsert: false
   });
   if (error) {

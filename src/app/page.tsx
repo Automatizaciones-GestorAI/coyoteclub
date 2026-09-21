@@ -42,7 +42,7 @@ export default async function Home() {
       return `
       <div class="${revealClass}" style="display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--line);">
         <div style="position: relative; width: 100%; background: var(--bg-alt); border-bottom: 1px solid var(--line); min-height: 200px;">
-          ${poster ? `<img src="${esc(poster)}" alt="${esc(evt.title)}" style="width: 100%; height: auto; display: block;">` : ''}
+          ${poster ? `<img src="${esc(poster)}" alt="${esc(evt.title)}" loading="lazy" decoding="async" style="width: 100%; height: auto; display: block;">` : ''}
           <div style="position: absolute; top: 16px; left: 16px; background: ${ACCENT}; color: #0b0b0c; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; padding: 8px 14px; border-radius: 999px;">${esc(badge)}</div>
         </div>
         <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 24px; padding: clamp(20px, 5vw, 32px); flex-grow: 1;">
@@ -92,7 +92,7 @@ export default async function Home() {
   const galleryHtml = (gallery || [])
     .map((img, i) => {
       const revealClass = i % 3 === 1 ? 'reveal reveal-d1' : i % 3 === 2 ? 'reveal reveal-d2' : 'reveal';
-      return `<div class="${revealClass} img-hover gallery-item"><img src="${esc(img.url)}" alt="${esc(img.alt)}"></div>`;
+      return `<div class="${revealClass} img-hover gallery-item"><img src="${esc(img.url)}" alt="${esc(img.alt)}" loading="lazy" decoding="async"></div>`;
     })
     .join('');
 
@@ -108,7 +108,7 @@ export default async function Home() {
   <!-- NAV -->
   <div class="site-nav" style="position: sticky; top: 0; z-index: 20; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; padding: 14px var(--px); background: rgba(11,11,12,0.94); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line);">
     <a href="/" style="display: flex; align-items: center;">
-      <img src="/images/logo.png" alt="Coyote Club" style="height: 30px; width: auto; display: block; filter: drop-shadow(0 0 10px rgba(255,20,150,0.4));">
+      <img src="/images/logo.webp" alt="Coyote Club" style="height: 30px; width: auto; display: block; filter: drop-shadow(0 0 10px rgba(255,20,150,0.4));">
     </a>
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Abrir o cerrar el menú">
     <label for="nav-toggle" class="nav-burger" aria-hidden="true"><span></span><span></span><span></span></label>
@@ -123,7 +123,7 @@ export default async function Home() {
   </div>
 
   <!-- HERO -->
-  <div style="position: relative; width: 100%; box-sizing: border-box; overflow: hidden; padding: clamp(48px, 10vw, 100px) var(--px) clamp(56px, 9vw, 90px) var(--px); display: flex; flex-direction: column; align-items: flex-start; gap: 28px; background-image: radial-gradient(ellipse at 15% 0%, rgba(255,42,122,0.28), transparent 55%), radial-gradient(ellipse at 85% 20%, rgba(130,60,255,0.18), transparent 50%), linear-gradient(90deg, rgba(11,11,12,0.98) 0%, rgba(11,11,12,0.92) 30%, rgba(11,11,12,0.72) 55%, rgba(11,11,12,0.4) 80%, rgba(11,11,12,0.15) 100%), url(/images/hero.png); background-size: auto, auto, auto, cover; background-position: center, center, center, center 30%; background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;">
+  <div style="position: relative; width: 100%; box-sizing: border-box; overflow: hidden; padding: clamp(48px, 10vw, 100px) var(--px) clamp(56px, 9vw, 90px) var(--px); display: flex; flex-direction: column; align-items: flex-start; gap: 28px; background-image: radial-gradient(ellipse at 15% 0%, rgba(255,42,122,0.28), transparent 55%), radial-gradient(ellipse at 85% 20%, rgba(130,60,255,0.18), transparent 50%), linear-gradient(90deg, rgba(11,11,12,0.98) 0%, rgba(11,11,12,0.92) 30%, rgba(11,11,12,0.72) 55%, rgba(11,11,12,0.4) 80%, rgba(11,11,12,0.15) 100%), url(/images/hero.webp); background-size: auto, auto, auto, cover; background-position: center, center, center, center 30%; background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;">
     <svg style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;" viewBox="0 0 1440 640" preserveAspectRatio="none">
       <line x1="1180" y1="-40" x2="900" y2="680" stroke="${ACCENT}" stroke-width="2" opacity="0.35"></line>
       <line x1="1260" y1="-40" x2="980" y2="680" stroke="#823cff" stroke-width="2" opacity="0.25"></line>
@@ -133,7 +133,7 @@ export default async function Home() {
       <div id="logo-box" style="position: relative; width: min(665px, calc(100vw - 2 * var(--px)));">
         <video id="logo-matte-video" src="/video/logo-loop.mp4" autoplay loop muted playsinline preload="auto" aria-hidden="true" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; z-index: -1;"></video>
         <canvas id="logo-canvas" width="640" height="154" role="img" aria-label="Coyote Club" style="width: 100%; height: auto; display: block;"></canvas>
-        <img class="logo-fallback" src="/images/logo.png" alt="" aria-hidden="true">
+        <img class="logo-fallback" src="/images/logo.webp" alt="" aria-hidden="true">
       </div>
     </div>
     <div style="position: relative; z-index: 1; font-size: clamp(12px, 3.4vw, 15px); font-weight: 600; letter-spacing: 0.14em; color: ${ACCENT};">SESEÑA (TOLEDO) · VIERNES Y SÁBADOS</div>
@@ -170,7 +170,7 @@ export default async function Home() {
     <div class="club-grid">
       <div class="reveal" style="display: flex; flex-direction: column; gap: 16px;">
         <div style="aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; background: var(--bg-alt);" class="img-hover">
-          <img src="/images/pista.png" alt="Pista de baile" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+          <img src="/images/pista.webp" alt="Pista de baile" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; display: block;">
         </div>
         <div style="display: flex; flex-direction: column; gap: 2px;">
           <div class="display" style="font-size: 26px; color: var(--text);">PISTA DE BAILE</div>
@@ -179,7 +179,7 @@ export default async function Home() {
       </div>
       <div class="reveal reveal-d1" style="display: flex; flex-direction: column; gap: 16px;">
         <div style="aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; background: var(--bg-alt);" class="img-hover">
-          <img src="/images/barra.png" alt="Barra" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+          <img src="/images/barra.webp" alt="Barra" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; display: block;">
         </div>
         <div style="display: flex; flex-direction: column; gap: 2px;">
           <div class="display" style="font-size: 26px; color: var(--text);">BARRA Y CÓCTELES</div>
@@ -188,7 +188,7 @@ export default async function Home() {
       </div>
       <div class="reveal reveal-d2" style="display: flex; flex-direction: column; gap: 16px;">
         <div style="aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; background: var(--bg-alt);" class="img-hover">
-          <img src="/images/reservados.jpg" alt="Zona reservados" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+          <img src="/images/reservados.webp" alt="Zona reservados" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; display: block;">
         </div>
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <div class="display" style="font-size: 26px; color: var(--text);">ZONA RESERVADOS</div>
@@ -271,7 +271,7 @@ export default async function Home() {
   <!-- FOOTER -->
   <div style="width: 100%; box-sizing: border-box; padding: clamp(40px, 6vw, 64px) var(--px) 32px var(--px); background: var(--bg);" class="footer-grid">
     <div style="display: flex; flex-direction: column; gap: 12px;">
-      <img src="/images/logo.png" alt="Coyote Club" style="height: 34px; width: auto; align-self: flex-start; display: block;">
+      <img src="/images/logo.webp" alt="Coyote Club" style="height: 34px; width: auto; align-self: flex-start; display: block;">
       <div style="font-size: 14px; line-height: 1.5; color: var(--text-dim);">La sala de referencia de Seseña. Pista, barra y reservados hasta que salga el sol.</div>
     </div>
     <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -484,6 +484,7 @@ export default async function Home() {
 
   return (
     <>
+      <link rel="preload" as="image" href="/images/hero.webp" type="image/webp" fetchPriority="high" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: businessJson }} />
       <style dangerouslySetInnerHTML={{ __html: pageCss }} />
       <div dangerouslySetInnerHTML={{ __html: html }} />
