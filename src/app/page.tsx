@@ -259,11 +259,12 @@ export default async function Home() {
         <a href="https://www.google.com/maps/search/?api=1&amp;query=${MAP_QUERY}" target="_blank" rel="noopener" class="btn-outline" style="font-size: 15px; padding: 16px 30px;">ABRIR EN GOOGLE MAPS</a>
       </div>
     </div>
-    <div id="map-box" style="position: relative; min-height: clamp(300px, 80vw, 420px); border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-card); display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;">
-      <div id="map-gate" style="display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 360px; text-align: center;">
-        <div class="display" style="font-size: 30px; color: var(--text);">MAPA</div>
-        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-dim);">Al pulsar, se carga el mapa de Google Maps y tu navegador se conecta con Google. <a href="/cookies" style="text-decoration: underline;">Más información</a></p>
-        <button type="button" id="map-load" class="btn" data-src="https://www.google.com/maps?q=${MAP_QUERY}&amp;output=embed&amp;hl=es">VER MAPA</button>
+    <div id="map-box" style="position: relative; min-height: clamp(380px, 100vw, 440px); border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-card); display: flex; align-items: flex-end; justify-content: center; padding: 12px; box-sizing: border-box;">
+      <img src="/images/mapa.webp" alt="Mapa con la ubicación de Coyote Club en la calle Trillo, Seseña" loading="lazy" decoding="async" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;">
+      <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" style="position: absolute; top: 8px; right: 10px; font-size: 10px; color: #cfc8c0; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 6px;">© OpenStreetMap</a>
+      <div id="map-gate" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 340px; box-sizing: border-box; padding: 14px 16px; border-radius: 16px; background: rgba(11,11,12,0.86); border: 1px solid var(--line); text-align: center;">
+        <p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-dim);">Al pulsar se abre el mapa interactivo de Google y tu navegador se conecta con Google. <a href="/cookies" style="text-decoration: underline;">Más información</a></p>
+        <button type="button" id="map-load" class="btn" style="width: 100%;" data-src="https://www.google.com/maps?q=${MAP_QUERY}&amp;output=embed&amp;hl=es">VER MAPA INTERACTIVO</button>
       </div>
     </div>
   </div>

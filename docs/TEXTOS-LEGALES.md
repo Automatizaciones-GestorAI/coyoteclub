@@ -51,7 +51,7 @@ reclamaciones y al derecho de admisión (normativa de Castilla-La Mancha) y que 
 
 - La web pública **no pone cookies ni usa almacenamiento local** (comprobado). Solo el panel del personal usa una cookie técnica de sesión.
 - Las **fuentes** se sirven desde la propia web (`/public/fonts`), no desde Google.
-- El **mapa** de Google no se carga hasta que el visitante pulsa «Ver mapa».
+- El **mapa** se ve como una imagen propia (`public/images/mapa.webp`, datos © OpenStreetMap, con su atribución en la web); el mapa interactivo de Google no se carga hasta que el visitante pulsa «Ver mapa interactivo». Si cambia la ubicación del local, hay que rehacer esa imagen.
 - Si algún día se añade analítica, publicidad o vídeos incrustados, **hará falta banner de consentimiento** y actualizar `/cookies`.
 
 ## Logos de pago
