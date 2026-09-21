@@ -60,7 +60,7 @@ aviso no activado en el banco…). Para eso:
 
 ## Aforo
 
-Cada noche tiene su **aforo** (personas), que se cambia en **Eventos → Editar** (por defecto 264, el aforo completo del local).
-En **Ventas** aparece cuántas plazas quedan de esa noche. Las entradas que se vendan en taquilla salen de ese mismo aforo,
-así que antes de vender en puerta mira las plazas libres. Si un pago llega tarde o se da entrada a mano con la noche completa,
-la entrada se respeta pero Ventas avisa de que se ha pasado el aforo.
+Cada noche tiene un **máximo de entradas** que se venden (por defecto 264, el aforo completo del local), que se cambia en
+**Eventos → Editar**. Cada entrada cuenta 1, sea del tramo que sea. En **Ventas** aparece cuántas se han vendido y cuántas quedan.
+Si un pago llega tarde o se da entrada a mano con la noche completa, la entrada se respeta pero Ventas avisa de que se ha
+pasado el aforo. La web no controla lo que se venda en taquilla.

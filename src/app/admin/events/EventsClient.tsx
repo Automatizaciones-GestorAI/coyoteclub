@@ -116,7 +116,7 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
         <div style={{ gridColumn: '1 / -1' }}>
           <label className="label">Aforo de la noche (personas)</label>
           <input type="number" inputMode="numeric" min={0} step={1} value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} placeholder="Sin límite" />
-          <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 6 }}>Máximo de entradas online de esa noche (todos los tramos juntos). El aforo completo del local son 264.</div>
+          <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 6 }}>Máximo de entradas que se venden para esa noche: cada entrada cuenta 1, sea del tramo que sea. El aforo completo del local son 264.</div>
         </div>
         <div style={{ gridColumn: '1 / -1' }}>
           <label className="label">Cartel</label>

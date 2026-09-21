@@ -104,8 +104,8 @@ export default function PricingClient({ initialTiers, stats }: { initialTiers: T
         <p style={{ margin: 0 }}>
           <strong style={{ color: 'var(--text)' }}>Entradas por noche:</strong> el máximo de entradas de ese tramo que se
           venden cada noche (el viernes y el sábado cuentan por separado). Déjalo vacío si no quieres poner límite.
-          Además cada noche tiene un <strong style={{ color: 'var(--text)' }}>aforo total</strong> del local, que se cambia en
-          «Eventos». La web no enseña números: avisa con «Quedan pocas» cuando a esa noche le quedan {LOW_STOCK} plazas o menos
+          Además cada noche tiene un <strong style={{ color: 'var(--text)' }}>aforo total</strong> (máximo de entradas que se
+          venden, sea del tramo que sea: cada entrada cuenta 1), que se cambia en «Eventos». La web no enseña números: avisa con «Quedan pocas» cuando a esa noche le quedan {LOW_STOCK} plazas o menos
           y con «Agotado» cuando llega a 0.
         </p>
       </div>

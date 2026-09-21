@@ -73,11 +73,14 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     return { tier, count: mine.length, cents: mine.reduce((s, t) => s + amountOf(t), 0), left, state: availabilityOf(left) };
   });
 
-  // Aforo: una noche concreta, o todas las próximas si se miran todas juntas
+  // Aforo: cuántas entradas se han vendido para la noche (cada entrada cuenta 1, sea del tramo que sea).
+  // Las reservas pendientes de pago también ocupan sitio hasta que pagan o caducan (20 min).
   const nightRows = (perNight ? [selectedEvent!] : selected === 'all' ? events.filter((e) => isUpcoming(e.event_date)) : []).map((e) => {
-    const used = usage.night[e.id] ?? 0;
     const cap = e.capacity ?? null;
-    return { e, used, cap, free: cap === null ? null : Math.max(0, cap - used), over: cap !== null && used > cap };
+    const soldN = tickets.filter((t) => t.event_id === e.id && (t.status === 'valid' || t.status === 'used')).length;
+    const pendN = tickets.filter((t) => t.event_id === e.id && t.status === 'pending').length;
+    const taken = soldN + pendN;
+    return { e, sold: soldN, pend: pendN, cap, free: cap === null ? null : Math.max(0, cap - taken), over: cap !== null && taken > cap, taken };
   });
 
   // Por día: desde la primera venta hasta la noche (o hasta hoy, si aún no ha llegado)
@@ -193,8 +196,8 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
         {nightRows.length > 0 && (
           <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <h2 style={{ fontSize: 22, margin: 0 }}>Aforo</h2>
-            {nightRows.map(({ e, used, cap, free, over }) => {
-              const pct = cap === null ? 0 : cap === 0 ? 100 : Math.min(100, Math.round((used / cap) * 100));
+            {nightRows.map(({ e, sold, pend, cap, free, over, taken }) => {
+              const pct = cap === null ? 0 : cap === 0 ? 100 : Math.min(100, Math.round((taken / cap) * 100));
               const hot = over || pct >= 90;
               return (
                 <div key={e.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -202,25 +205,26 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                     <div style={{ fontWeight: 700 }}>
                       {e.title} <span style={{ fontWeight: 400, color: 'var(--text-dim)', fontSize: 13 }}>· {dayLabel(e.event_date, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                     </div>
-                    <div className="display" style={{ fontSize: 30, lineHeight: 1 }}>
-                      {used}
+                    <div className="display" style={{ fontSize: 30, lineHeight: 1 }} title="Entradas vendidas / aforo">
+                      {sold}
                       <span style={{ color: 'var(--text-dim)' }}>{cap === null ? '' : ` / ${cap}`}</span>
+                      <span style={{ fontFamily: 'inherit', fontSize: 13, letterSpacing: 0, color: 'var(--text-dim)' }}> vendidas</span>
                     </div>
                   </div>
                   {cap !== null && (
-                    <div role="progressbar" aria-valuemin={0} aria-valuemax={cap} aria-valuenow={Math.min(used, cap)} aria-label={`Aforo de ${e.title}`} style={{ height: 10, borderRadius: 999, background: 'var(--line)', overflow: 'hidden' }}>
+                    <div role="progressbar" aria-valuemin={0} aria-valuemax={cap} aria-valuenow={Math.min(taken, cap)} aria-label={`Entradas vendidas de ${e.title}`} style={{ height: 10, borderRadius: 999, background: 'var(--line)', overflow: 'hidden' }}>
                       <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: over ? '#ff4d4d' : hot ? '#ffbe3c' : 'var(--accent)' }} />
                     </div>
                   )}
                   <div style={{ fontSize: 13, color: over ? '#ff9b9b' : 'var(--text-dim)' }}>
                     {cap === null
-                      ? 'Sin límite de aforo en esta noche.'
+                      ? 'Sin límite de entradas para esta noche.'
                       : over
-                        ? `⚠ Se han dado ${used - cap} entradas de más sobre el aforo (pagos tardíos o entradas dadas a mano). Revisa «Entradas».`
+                        ? `⚠ Se han dado ${taken - cap} entradas de más sobre el aforo (pagos tardíos o entradas dadas a mano). Revisa «Entradas».`
                         : free === 0
-                          ? 'Aforo completo: ya no se venden más entradas online ni quedan plazas para taquilla.'
-                          : `Quedan ${free} plazas de ${cap}. Lo que se venda en taquilla sale de este mismo aforo.`}
-                    {perNight && pending > 0 ? ` Incluye ${pending} ${pending === 1 ? 'reserva pendiente' : 'reservas pendientes'} de pago.` : ''}
+                          ? 'Aforo completo: ya no se venden más entradas online.'
+                          : `Quedan ${free} entradas a la venta de ${cap}.`}
+                    {pend > 0 ? ` Hay ${pend} ${pend === 1 ? 'reserva pendiente' : 'reservas pendientes'} de pago: si no pagan en 20 minutos, su plaza se libera.` : ''}
                   </div>
                 </div>
               );
