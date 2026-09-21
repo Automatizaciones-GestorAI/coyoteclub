@@ -1,15 +1,18 @@
 import { supabaseAdmin } from '@/lib/supabase';
 
 const DAY = 86_400_000;
-// Resultados de un aviso del banco que necesitan que una persona los mire
-export const ANOMALIES = ['amount_mismatch', 'not_found', 'reactivated_oversold', 'error', 'bad_currency'];
+// Resultados de un aviso de pago que necesitan que una persona los mire
+export const ANOMALIES = ['amount_mismatch', 'not_found', 'reactivated_oversold', 'error', 'bad_currency', 'partial_refund', 'refunded_but_used', 'dispute'];
 
 export const ANOMALY_TEXT: Record<string, string> = {
-  amount_mismatch: 'El banco cobró un importe distinto del esperado. La entrada NO se ha activado.',
-  not_found: 'El banco avisó de un pago de un pedido que no existe en la web.',
+  amount_mismatch: 'Stripe cobró un importe distinto del esperado. La entrada NO se ha activado.',
+  not_found: 'Stripe avisó de un pago o una devolución de un pedido que no existe en la web.',
   reactivated_oversold: 'Pago tardío entregado, pero ya no quedaban plazas: se ha vendido de más.',
-  error: 'Falló el procesado de un aviso del banco (la web tuvo un error). Comprueba que la entrada existe.',
-  bad_currency: 'El banco avisó de un cobro en una moneda distinta del euro.'
+  error: 'Falló el procesado de un aviso de Stripe (la web tuvo un error). Comprueba que la entrada existe.',
+  bad_currency: 'Stripe avisó de un cobro en una moneda distinta del euro.',
+  partial_refund: 'Se ha hecho una devolución PARCIAL en Stripe: la entrada sigue válida. Comprueba si es lo que querías.',
+  refunded_but_used: 'Se ha devuelto en Stripe una entrada que YA se había usado (la persona ya entró).',
+  dispute: 'Un cliente ha reclamado el cargo a su banco (disputa en Stripe). Responde desde el panel de Stripe.'
 };
 
 const since = (days: number) => new Date(Date.now() - days * DAY).toISOString();
@@ -38,7 +41,7 @@ export async function getReviewItems() {
   return { expired: expired.data ?? [], events: events.data ?? [], manual: manual.data ?? [] };
 }
 
-// Cuándo llegó el último aviso del banco (sirve para detectar a tiempo una notificación mal configurada)
+// Cuándo llegó el último aviso de Stripe (sirve para detectar a tiempo un aviso mal configurado)
 export async function getLastBankNotice(): Promise<string | null> {
   try {
     const { data } = await supabaseAdmin.from('payment_events').select('created_at').order('created_at', { ascending: false }).limit(1);

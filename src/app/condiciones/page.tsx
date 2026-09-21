@@ -16,9 +16,9 @@ export default function Condiciones() {
       <h2>2. Cómo se compra</h2>
       <ul>
         <li>Eliges la noche y el tipo de entrada, escribes tu nombre y tu teléfono y pulsas «Ir a pagar».</li>
-        <li>Te llevamos a la pasarela de pago segura de Redsys, donde pagas con tarjeta Visa o Mastercard.</li>
-        <li>Al reservar tu entrada tienes <strong>20 minutos</strong> para completar el pago. Pasado ese tiempo la reserva se libera. Si tu pago llegara después de ese plazo, lo respetamos y tu entrada sigue siendo válida.</li>
-        <li>Cuando el banco confirma el pago, la web te muestra tu entrada con su <strong>código QR</strong>. No la enviamos por email: <strong>guarda el enlace de esa página o haz una captura de pantalla</strong>, es tu justificante. Si la pierdes, escríbenos por WhatsApp con tu nombre, tu teléfono y la noche y te la volvemos a enviar.</li>
+        <li>Te llevamos a la página de pago segura de Stripe, donde pagas con tarjeta (Visa, Mastercard) u otros medios que aparezcan, como Apple Pay o Google Pay. Stripe te pedirá tu email para enviarte el recibo.</li>
+        <li>Al reservar tu entrada tienes <strong>30 minutos</strong> para completar el pago. Pasado ese tiempo la página de pago caduca y la reserva se libera; si aún quieres la entrada, tendrás que empezar la compra de nuevo.</li>
+        <li>Cuando Stripe confirma el pago, la web te muestra tu entrada con su <strong>código QR</strong>. No la enviamos por email: <strong>guarda el enlace de esa página o haz una captura de pantalla</strong>, es tu justificante. Si la pierdes, escríbenos por WhatsApp con tu nombre, tu teléfono y la noche y te la volvemos a enviar.</li>
       </ul>
 
       <h2>3. Precios y pago</h2>
@@ -43,7 +43,7 @@ export default function Condiciones() {
       <p>Para pedir una devolución, escríbenos a <F v={LEGAL.holderEmail} what="email de contacto" /> o por WhatsApp al {LEGAL.phone} indicando tu nombre, tu teléfono y el número de pedido.</p>
 
       <h2>6. Si pagas y no te aparece la entrada</h2>
-      <p>Si te han cobrado y no ves tu entrada con el QR (por ejemplo, porque se cortó la conexión), <strong>no vuelvas a pagar</strong>. Escríbenos por WhatsApp al {LEGAL.phone} con el número de pedido que aparece en la pantalla o en el justificante del banco. Comprobamos el cobro y, si es correcto, te damos tu entrada o te devolvemos el dinero. En la puerta también podemos comprobar el cargo que nos enseñes en tu móvil.</p>
+      <p>Si te han cobrado y no ves tu entrada con el QR (por ejemplo, porque se cortó la conexión), <strong>no vuelvas a pagar</strong>. Escríbenos por WhatsApp al {LEGAL.phone} con tu nombre, tu teléfono y la noche (y el recibo que te envía Stripe, si lo tienes). Comprobamos el cobro directamente en Stripe y, si es correcto, te damos tu entrada o te devolvemos el dinero. En la puerta también podemos comprobar tu pago al momento.</p>
 
       <h2>7. Responsabilidad y normas del local</h2>
       <p>Debes respetar las normas del local y las indicaciones del personal. No nos hacemos responsables de la pérdida o el robo de la entrada ni de su uso por terceros a quienes se la hayas facilitado. Ninguna de las partes responde del incumplimiento causado por fuerza mayor o por circunstancias fuera de su control.</p>

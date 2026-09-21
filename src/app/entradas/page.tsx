@@ -47,6 +47,7 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
       events={publicEvents}
       noUpcoming={published.length > 0 && upcoming.length === 0}
       paymentFailed={pago === 'ko'}
+      paymentUnknown={pago === 'err'}
     />
   );
 }

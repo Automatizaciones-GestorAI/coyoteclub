@@ -1,7 +1,7 @@
 # Coyote Club — Panel de administración
 
 Panel `/admin` para gestionar eventos, precios y galería, más venta de
-entradas con QR y cobro por Redsys.
+entradas con QR y cobro con Stripe.
 
 ## Puesta en marcha
 
@@ -11,10 +11,10 @@ entradas con QR y cobro por Redsys.
      proyecto Supabase "Coyote Club" → Project Settings → API.
    - `ADMIN_PASSWORD`: la contraseña con la que entrarás en `/admin`.
    - `ADMIN_SESSION_SECRET`: cualquier cadena larga y aleatoria.
-   - `REDSYS_MERCHANT_CODE`, `REDSYS_TERMINAL`, `REDSYS_SECRET_KEY`: te los da
-     el banco al dar de alta el TPV virtual del cliente. Mientras no los
-     tengas, deja `REDSYS_ENV=test` y usa las claves de prueba de Redsys.
-   - `NEXT_PUBLIC_SITE_URL`: la URL pública donde despliegues esto.
+   - `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET`: de la cuenta de Stripe del
+     cliente (guía en `docs/PUESTA-EN-MARCHA-STRIPE.md`). Mientras no los tengas,
+     «Comprar» avisa de que el pago aún no está disponible.
+   - `NEXT_PUBLIC_SITE_URL` (opcional): la URL pública donde despliegues esto.
 3. `npm run dev` para probar en local.
 
 ## Rutas
@@ -25,7 +25,7 @@ entradas con QR y cobro por Redsys.
 - `/admin/gallery` — subir/quitar fotos de la galería
 - `/scan` — abrir desde el móvil en la puerta para escanear las entradas (QR)
 - `/ticket/[qr_code]` — página que ve el comprador con su entrada y QR
-- `/entradas` — página pública de compra: el cliente elige tramo, pone su nombre y teléfono, y se le redirige a Redsys a pagar
+- `/entradas` — página pública de compra: el cliente elige tramo, pone su nombre y teléfono, y se le lleva a pagar a Stripe
 
 ## Despliegue (mismo flujo que Rememberos)
 
@@ -54,11 +54,11 @@ cargados como datos iniciales.
 - Desactivar a alguien o cambiarle la contraseña cierra sus sesiones al instante. Siempre queda al menos un gestor activo.
 - Las acciones a mano (dar entrada, dar por pagada, anular…) y quién escaneó cada entrada quedan anotadas con el usuario.
 
-## Cobro con Redsys
+## Cobro con Stripe
 
-Ya está preparado de punta a punta (entrada pendiente → aviso firmado de Redsys → entrada válida con QR,
-caducidad de reservas, control de aforo por tramo). Guía para activarlo con los datos del banco:
-[`docs/PUESTA-EN-MARCHA-REDSYS.md`](docs/PUESTA-EN-MARCHA-REDSYS.md).
+Ya está preparado de punta a punta (entrada pendiente → página de pago de Stripe → aviso firmado + comprobación a Stripe al volver →
+entrada válida con QR, reservas que caducan a los 31 min, devoluciones que anulan la entrada solas, aforo por noche).
+Guía para activarlo con las claves del cliente: [`docs/PUESTA-EN-MARCHA-STRIPE.md`](docs/PUESTA-EN-MARCHA-STRIPE.md).
 
 ## Base de datos
 

@@ -16,7 +16,10 @@ const MESSAGES: Record<string, string> = {
   marked_paid: 'Hecho: entrada dada por pagada.', marked_paid_oversold: 'Hecho, pero esa noche o ese tramo ya estaba completo: se han dado entradas de más. Revisa el aforo en «Ventas».',
   cancelled: 'Entrada anulada.', already: 'Ya estaba así.', used: 'Marcada como usada.', not_valid: 'No estaba válida.',
   let_in: 'Entrada dada a mano (queda por revisar).', let_in_oversold: 'Entrada dada a mano; esa noche o ese tramo ya estaba completo.',
-  already_used: 'Ya había entrado con esta entrada.', not_allowed: 'Esta entrada está anulada o devuelta: no se puede dar entrada.', reviewed: 'Marcado como revisado.', not_found: 'No se encontró.'
+  already_used: 'Ya había entrado con esta entrada.',
+  stripe_confirmed: 'Stripe confirma el cobro: la entrada ya es válida.', stripe_open: 'Stripe dice que todavía NO ha pagado (su página de pago sigue abierta).',
+  stripe_expired: 'Stripe dice que NO hubo cobro (la sesión de pago caducó o se canceló).', stripe_no_session: 'Esta compra no llegó a abrir la página de pago de Stripe: no hay cobro que comprobar.',
+  stripe_mismatch: 'Stripe cobró un importe distinto del esperado: NO se ha activado. Revísalo en el panel de Stripe.', stripe_error: 'No se ha podido consultar Stripe ahora mismo. Inténtalo en un momento.', not_allowed: 'Esta entrada está anulada o devuelta: no se puede dar entrada.', reviewed: 'Marcado como revisado.', not_found: 'No se encontró.'
 };
 
 function useAction() {
@@ -55,7 +58,10 @@ export function TicketActions({ id, role, status, cancelReason, viewUrl, waUrl, 
           <button className="btn-outline btn-sm" disabled={busy} onClick={() => run(id, 'mark_used', '¿Marcar esta entrada como usada (ha entrado)?')}>Marcar como usada</button>
         )}
         {status !== 'used' && status !== 'valid' && canPay && (
-          <button className="btn btn-sm" disabled={busy} onClick={() => run(id, 'mark_paid', `¿Has comprobado en Redsys que SÍ se cobraron ${amount}? La entrada pasará a válida y el cliente podrá verla.`)}>Sí cobró: dar entrada válida</button>
+          <button className="btn btn-sm" disabled={busy} onClick={() => run(id, 'check_payment')}>Comprobar el cobro en Stripe</button>
+        )}
+        {status !== 'used' && status !== 'valid' && canPay && (
+          <button className="btn-outline btn-sm" disabled={busy} onClick={() => run(id, 'mark_paid', `¿Has comprobado en el panel de Stripe que SÍ se cobraron ${amount}? La entrada pasará a válida y el cliente podrá verla.`)}>Sí cobró: dar entrada (a mano)</button>
         )}
         {canLetIn && (
           <button className="btn-outline btn-sm" disabled={busy} onClick={() => run(id, 'let_in', `¿Dar entrada ahora en la puerta? Quedará anotada para revisar el cobro después.`, 'Dada a mano desde la ficha')}>Dar entrada ahora</button>
@@ -65,7 +71,7 @@ export function TicketActions({ id, role, status, cancelReason, viewUrl, waUrl, 
             <summary className="btn-outline btn-sm btn-danger">Anular…</summary>
             <div className="pop">
               <button className="btn-outline btn-sm" disabled={busy} onClick={() => run(id, 'cancel', '¿Anular esta entrada (error o duplicada)? Ya no valdrá y la plaza vuelve al tramo.')}>Anular (error o duplicada)</button>
-              <button className="btn-outline btn-sm" disabled={busy} onClick={() => run(id, 'refund', `¿Marcar como DEVUELTA? Hazlo cuando ya hayas devuelto ${amount} en el panel de Redsys. La entrada dejará de valer.`)}>Anular (devuelta en Redsys)</button>
+              <button className="btn-outline btn-sm" disabled={busy} onClick={() => run(id, 'refund', `¿Marcar como DEVUELTA? Hazlo si ya devolviste ${amount} en Stripe y la entrada no se anuló sola. La entrada dejará de valer.`)}>Anular (devuelta en Stripe)</button>
             </div>
           </details>
         )}
@@ -82,7 +88,8 @@ export function ReviewActions({ kind, id, amount, waUrl }: { kind: 'expired' | '
       <div className="actions" style={{ justifyContent: 'flex-start' }}>
         {kind === 'expired' && (
           <>
-            <button className="btn btn-sm" disabled={busy} onClick={() => run(id, 'mark_paid', `¿Has comprobado en Redsys que SÍ se cobraron ${amount}? La entrada pasará a válida.`)}>Sí cobró: dar entrada</button>
+            <button className="btn btn-sm" disabled={busy} onClick={() => run(id, 'check_payment')}>Comprobar el cobro en Stripe</button>
+            <button className="btn-outline btn-sm" disabled={busy} onClick={() => run(id, 'mark_paid', `¿Has comprobado en el panel de Stripe que SÍ se cobraron ${amount}? La entrada pasará a válida.`)}>Sí cobró: dar entrada (a mano)</button>
             <button className="btn-outline btn-sm" disabled={busy} onClick={() => run(id, 'reviewed')}>No cobró: dejar anulada</button>
             {waUrl && <a className="btn-outline btn-sm" href={waUrl} target="_blank" rel="noopener">WhatsApp al cliente</a>}
           </>

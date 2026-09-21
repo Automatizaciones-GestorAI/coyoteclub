@@ -219,7 +219,7 @@ export default async function Home() {
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 24px; max-width: 1320px;">
       ${tiersHtml}
     </div>
-    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 13px; color: var(--text-dim);">${paymentLogosHtml()}<span>Pago seguro con tarjeta · Redsys · Precios con IVA incluido</span></div>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 13px; color: var(--text-dim);">${paymentLogosHtml()}<span>Pago seguro con Stripe · Precios con IVA incluido</span></div>
   </div>
 
   <!-- GALERÍA -->

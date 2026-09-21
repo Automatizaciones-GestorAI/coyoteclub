@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { availabilityOf, isUpcoming, slotsLeft } from '@/lib/stock';
 import { getUsage } from '@/lib/stock-db';
-import { getRedsysStatus } from '@/lib/redsys';
+import { getStripeStatus } from '@/lib/stripe';
 import { legalMissing } from '@/lib/legal';
 import { getLastBankNotice, getReviewCount } from '@/lib/review';
 import AdminShell, { requireAdmin } from '../AdminShell';
@@ -109,7 +109,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     id: e.id,
     label: `${e.title} · ${dayLabel(e.event_date, { weekday: 'short', day: 'numeric', month: 'short' })}`
   }));
-  const redsys = getRedsysStatus();
+  const stripe = getStripeStatus();
   const legalPending = legalMissing();
   const [lastNotice, toReview] = await Promise.all([getLastBankNotice(), getReviewCount()]);
   const noticeText = lastNotice ? new Date(lastNotice).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null;
@@ -128,19 +128,19 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
 
         <div
           className="card"
-          style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 18px', borderColor: redsys.ok ? 'rgba(46,204,113,0.5)' : 'rgba(255,190,60,0.5)' }}
+          style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 18px', borderColor: stripe.ok ? 'rgba(46,204,113,0.5)' : 'rgba(255,190,60,0.5)' }}
         >
-          <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1.2, color: redsys.ok ? '#2ecc71' : '#ffbe3c' }}>{redsys.ok ? '✔' : '⚠'}</span>
+          <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1.2, color: stripe.ok ? '#2ecc71' : '#ffbe3c' }}>{stripe.ok ? '✔' : '⚠'}</span>
           <div style={{ fontSize: 14, lineHeight: 1.5 }}>
-            <strong>Cobro online: {redsys.ok ? (redsys.mode === 'live' ? 'activo (modo real)' : 'listo en modo pruebas') : 'sin activar'}</strong>
-            {redsys.ok ? (
+            <strong>Cobro online (Stripe): {stripe.ok ? (stripe.mode === 'live' ? 'activo (modo real)' : 'listo en modo pruebas') : 'sin activar'}</strong>
+            {stripe.ok ? (
               <div style={{ color: 'var(--text-dim)' }}>
-                {redsys.mode === 'live' ? 'Los cobros son reales.' : 'Los cobros son de prueba: no se mueve dinero. Cuando el banco lo autorice, cambia REDSYS_ENV a live.'}
+                {stripe.mode === 'live' ? 'Los cobros son reales.' : 'Los cobros son de prueba: no se mueve dinero. Para cobrar de verdad, pon las claves reales de Stripe (sk_live_…) y su secreto de aviso.'}
                 <br />
-                {noticeText ? `Último aviso recibido del banco: ${noticeText}.` : 'Todavía no ha llegado ningún aviso del banco: haz una compra de prueba para comprobar que las notificaciones llegan.'}
+                {noticeText ? `Último aviso recibido de Stripe: ${noticeText}.` : 'Todavía no ha llegado ningún aviso de Stripe: haz una compra de prueba para comprobar que los avisos llegan.'}
               </div>
             ) : (
-              <div style={{ color: 'var(--text-dim)' }}>Falta configurar Redsys: {redsys.problems.join('; ')}. Hasta entonces nadie puede pagar online.</div>
+              <div style={{ color: 'var(--text-dim)' }}>Falta configurar Stripe: {stripe.problems.join('; ')}. Hasta entonces nadie puede pagar online.</div>
             )}
           </div>
         </div>
@@ -151,7 +151,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             <div style={{ fontSize: 14, lineHeight: 1.5 }}>
               <strong>Textos legales: faltan datos por completar</strong>
               <div style={{ color: 'var(--text-dim)' }}>
-                Aviso legal, privacidad y condiciones de compra tienen huecos: {legalPending.join('; ')}. El banco los pedirá antes de activar el cobro real.
+                Aviso legal, privacidad y condiciones de compra tienen huecos: {legalPending.join('; ')}. Stripe y la ley los piden antes de cobrar de verdad.
               </div>
             </div>
           </div>

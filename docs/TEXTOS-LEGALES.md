@@ -1,6 +1,6 @@
 # Textos legales, cookies y logos de pago
 
-La web ya incluye las páginas que los bancos (Redsys) y la ley piden a una tienda de entradas:
+La web ya incluye las páginas que Stripe y la ley piden a una tienda de entradas:
 
 | Página | Qué es |
 |---|---|
@@ -17,7 +17,7 @@ incluido», logos Visa/Mastercard, enlaces legales en el pie, en `/entradas` y e
 Se rellenan en **`src/lib/legal.ts`** (los huecos salen en las páginas como «[COMPLETAR: …]» y el panel, en **Ventas**,
 avisa de lo que falta):
 
-1. **Nombre y apellidos o razón social** de quien vende (el que da de alta el TPV en el banco).
+1. **Nombre y apellidos o razón social** de quien vende (el titular de la cuenta de Stripe).
 2. **NIF / CIF.**
 3. **Domicilio** fiscal completo.
 4. **Email** de contacto (también sirve para ejercer los derechos de protección de datos).
@@ -45,8 +45,8 @@ reclamaciones y al derecho de admisión (normativa de Castilla-La Mancha) y que 
 ## Logos de pago
 
 Están en `public/pagos/visa.svg` (Visa, marca vigente desde 2021) y `public/pagos/mastercard.svg` (círculos de Mastercard),
-en color y sobre una pastilla blanca. Si el banco entrega su kit de logos oficiales, basta con **sustituir esos archivos
-manteniendo el nombre**. El logo de Redsys lo facilita el banco: se puede añadir en `src/lib/legal-ui.ts`.
+en color y sobre una pastilla blanca. Si se quieren usar otros logos, basta con **sustituir esos archivos
+manteniendo el nombre**. Otros logos (Apple Pay, Google Pay…) se pueden añadir en `src/lib/legal-ui.ts`.
 
 ## Pendiente conocido
 

@@ -21,7 +21,7 @@ const shell = {
 function Message({ title, text, refresh, cta, help }: { title: string; text: string; refresh?: boolean; cta?: boolean; help?: { text: string; href: string } }) {
   return (
     <div style={shell}>
-      {/* Mientras el banco no confirma, la página se actualiza sola cada pocos segundos */}
+      {/* Mientras el pago no se confirma, la página se actualiza sola cada pocos segundos */}
       {refresh && <AutoRefresh />}
       <div className="card" style={{ width: 'min(340px, 100%)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <img src="/images/logo.png" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 70%)', height: 'auto', margin: '0 auto' }} />
@@ -63,8 +63,8 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
       <Message
         refresh
         title="Confirmando tu pago…"
-        text="Estamos esperando la confirmación del banco. No cierres esta página: tu entrada aparecerá aquí en unos segundos."
-        help={minutes >= 3 ? { text: 'Está tardando más de lo normal. Si el banco ya te ha cobrado, no pagues otra vez: guarda este enlace y escríbenos con tu nombre y la hora del pago. Te damos tu entrada enseguida.', href: helpHref } : undefined}
+        text="Estamos esperando la confirmación del pago. No cierres esta página: tu entrada aparecerá aquí en unos segundos."
+        help={minutes >= 3 ? { text: 'Está tardando más de lo normal. Si ya te han cobrado, no pagues otra vez: guarda este enlace y escríbenos con tu nombre y la hora del pago. Te damos tu entrada enseguida.', href: helpHref } : undefined}
       />
     );
   }
@@ -72,7 +72,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
   if (ticket.status === 'cancelled') {
     const reason = ticket.cancel_reason as string | null;
     if (reason === 'payment_failed') {
-      return <Message cta title="Pago no completado" text="El banco no ha autorizado el pago, así que no se te ha cobrado nada. Puedes volver a intentarlo con otra tarjeta." />;
+      return <Message cta title="Pago no completado" text="El pago no se ha completado, así que no se te ha cobrado nada. Puedes volver a intentarlo cuando quieras." />;
     }
     if (reason === 'refunded') {
       return <Message title="Entrada devuelta" text="Esta entrada se ha devuelto y el importe se reembolsará por el mismo medio de pago. Si tienes dudas, escríbenos." help={{ text: 'Cualquier duda, estamos en WhatsApp.', href: helpHref }} />;
@@ -80,12 +80,12 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
     if (reason === 'manual') {
       return <Message title="Entrada anulada" text="Esta entrada ha sido anulada por el club. Si crees que es un error, escríbenos." help={{ text: 'Cuéntanos qué ha pasado.', href: helpHref }} />;
     }
-    // Caducada sin recibir confirmación del banco (o anulaciones antiguas sin motivo): NO se puede asegurar que no se cobrara
+    // Caducada sin recibir confirmación del pago (o anulaciones antiguas sin motivo): NO se puede asegurar que no se cobrara
     return (
       <Message
         title="No hemos recibido tu pago"
-        text="No nos ha llegado la confirmación del banco y esta entrada no es válida todavía."
-        help={{ text: 'Si el banco SÍ te ha cobrado, no te preocupes: escríbenos con tu nombre y la hora del pago y te damos tu entrada o te devolvemos el dinero. No pagues otra vez.', href: helpHref }}
+        text="No nos ha llegado la confirmación del pago y esta entrada no es válida todavía."
+        help={{ text: 'Si SÍ te han cobrado, no te preocupes: escríbenos con tu nombre y la hora del pago y te damos tu entrada o te devolvemos el dinero. No pagues otra vez.', href: helpHref }}
         cta
       />
     );

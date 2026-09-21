@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { CLUB_WHATSAPP, phoneToWhatsapp, siteBase, whatsappLink } from '@/lib/site';
 import { ANOMALY_TEXT, getReviewItems } from '@/lib/review';
+import { stripeDashboardUrl } from '@/lib/stripe';
 import AdminShell, { requireStaff } from '../AdminShell';
 import { ReviewActions, TicketActions } from './Actions';
 
@@ -18,7 +19,8 @@ function chip(t: any): { label: string; cls: string } {
 }
 const OUTCOME: Record<string, string> = {
   confirmed: 'Pago confirmado', already: 'Aviso repetido (ya estaba confirmado)', cancelled: 'Pago rechazado', reactivated: 'Pago tardío confirmado',
-  reactivated_oversold: 'Pago tardío (sin plazas)', amount_mismatch: 'Importe distinto: NO activada', not_found: 'Pedido no encontrado', ignored: 'Aviso ignorado', error: 'Error al procesar', bad_currency: 'Moneda distinta'
+  reactivated_oversold: 'Pago tardío (sin plazas)', amount_mismatch: 'Importe distinto: NO activada', not_found: 'Pedido no encontrado', ignored: 'Aviso ignorado', error: 'Error al procesar', bad_currency: 'Moneda distinta',
+  expired: 'Sesión de pago caducada (sin cobro)', payment_failed: 'Pago cancelado o rechazado (sin cobro)', refunded: 'Devuelto en Stripe: entrada anulada', partial_refund: 'Devolución parcial: revisar', refunded_but_used: 'Devuelto, pero la entrada ya se había usado', dispute: 'El cliente ha reclamado el cargo a su banco', pending_async: 'Pago en proceso (método diferido)'
 };
 const AUDIT: Record<string, string> = { mark_paid: 'Dada por pagada a mano', cancel: 'Anulada', mark_used: 'Marcada como usada', let_in: 'Dada entrada a mano en la puerta' };
 
@@ -62,14 +64,14 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
           <div className="card" style={{ borderColor: 'rgba(255,77,77,0.6)', display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <h2 style={{ fontSize: 24 }}>⚠ Por revisar ({reviewCount})</h2>
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-dim)' }}>Cosas que necesitan que alguien las mire. Compruébalas en el módulo de administración de Redsys buscando por el <b style={{ color: 'var(--text)' }}>número de pedido</b>.</p>
+              <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-dim)' }}>Cosas que necesitan que alguien las mire. Puedes comprobar cada cobro en Stripe con el botón <b style={{ color: 'var(--text)' }}>«Comprobar el cobro en Stripe»</b> o buscando el <b style={{ color: 'var(--text)' }}>número de pedido</b> en su panel.</p>
             </div>
 
             {review.expired.map((t: any) => (
               <div key={t.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ fontSize: 14, lineHeight: 1.5 }}>
                   <b>{t.buyer_name}</b> · {t.buyer_phone} · {t.price_tiers?.label} · {eur(t.amount_cents)}<br />
-                  <span style={{ color: 'var(--text-dim)', fontSize: 13 }}>La reserva caducó sin recibir la confirmación del banco. <b style={{ color: 'var(--text)' }}>¿Le cobraron?</b> Pedido <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{t.order_id}</span> · iniciada {when(t.created_at)}</span>
+                  <span style={{ color: 'var(--text-dim)', fontSize: 13 }}>La reserva caducó sin que Stripe confirmara el cobro. <b style={{ color: 'var(--text)' }}>¿Le cobraron?</b> Pedido <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{t.order_id}</span> · iniciada {when(t.created_at)}</span>
                 </div>
                 <ReviewActions kind="expired" id={t.id} amount={eur(t.amount_cents)} waUrl={waFor(t, `Hola ${t.buyer_name ?? ''}, te escribimos de Coyote Club sobre tu compra de entrada (pedido ${t.order_id}).`)} />
               </div>
@@ -78,7 +80,7 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
               <div key={t.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ fontSize: 14, lineHeight: 1.5 }}>
                   <b>{t.buyer_name}</b> · {t.buyer_phone} · {t.price_tiers?.label} · {eur(t.amount_cents)}<br />
-                  <span style={{ color: 'var(--text-dim)', fontSize: 13 }}>Se le dio entrada a mano en la puerta ({when(t.used_at)}). <b style={{ color: 'var(--text)' }}>Comprueba que el pedido</b> <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{t.order_id}</span> <b style={{ color: 'var(--text)' }}>aparece cobrado en Redsys.</b></span>
+                  <span style={{ color: 'var(--text-dim)', fontSize: 13 }}>Se le dio entrada a mano en la puerta ({when(t.used_at)}). <b style={{ color: 'var(--text)' }}>Comprueba que el pedido</b> <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{t.order_id}</span> <b style={{ color: 'var(--text)' }}>aparece cobrado en Stripe.</b></span>
                 </div>
                 <ReviewActions kind="manual" id={t.id} />
               </div>
@@ -87,7 +89,7 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
               <div key={e.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ fontSize: 14, lineHeight: 1.5 }}>
                   <b>{ANOMALY_TEXT[e.outcome] ?? e.outcome}</b><br />
-                  <span style={{ color: 'var(--text-dim)', fontSize: 13 }}>Pedido <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{e.order_id}</span> · código {e.ds_response ?? '—'} · {eur(e.amount_cents)} · {when(e.created_at)}</span>
+                  <span style={{ color: 'var(--text-dim)', fontSize: 13 }}>Pedido <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{e.order_id}</span> · {e.ds_response ?? '—'} · {eur(e.amount_cents)} · {when(e.created_at)}</span>
                 </div>
                 <ReviewActions kind="event" id={e.id} />
               </div>
@@ -141,15 +143,16 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
               <details>
                 <summary style={{ cursor: 'pointer', fontSize: 13, color: 'var(--text-dim)' }}>Ficha para verificar el cobro</summary>
                 <div style={{ marginTop: 10, fontSize: 13, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 14px' }}>
-                  <span style={{ color: 'var(--text-dim)' }}>Pedido (Redsys)</span><span style={{ fontFamily: 'monospace' }}>{t.order_id ?? '—'}</span>
+                  <span style={{ color: 'var(--text-dim)' }}>Pedido</span><span style={{ fontFamily: 'monospace' }}>{t.order_id ?? '—'}</span>
+                  {isAdmin && stripeDashboardUrl(t.payment_intent) && (<><span style={{ color: 'var(--text-dim)' }}>Cobro en Stripe</span><a href={stripeDashboardUrl(t.payment_intent)!} target="_blank" rel="noopener" style={{ color: 'var(--accent)', fontWeight: 700 }}>Abrir en Stripe (aquí se devuelve) →</a></>)}
                   <span style={{ color: 'var(--text-dim)' }}>Importe esperado</span><span>{eur(t.amount_cents)}</span>
                   <span style={{ color: 'var(--text-dim)' }}>Iniciada</span><span>{when(t.created_at)}</span>
                   <span style={{ color: 'var(--text-dim)' }}>Cobro confirmado</span><span>{t.paid_at ? when(t.paid_at) : 'no'}</span>
                   <span style={{ color: 'var(--text-dim)' }}>Entró</span><span>{t.used_at ? `${when(t.used_at)}${t.used_by ? ` · escaneada por ${t.used_by}` : ''}` : 'no'}</span>
-                  <span style={{ color: 'var(--text-dim)' }}>Avisos del banco</span>
+                  <span style={{ color: 'var(--text-dim)' }}>Avisos de Stripe</span>
                   <span>
                     {notes.length === 0 ? <b style={{ color: '#ffbe3c' }}>ninguno recibido</b> : notes.map((n: any, i: number) => (
-                      <span key={i} style={{ display: 'block' }}>{when(n.created_at)} · código {n.ds_response ?? '—'} · {eur(n.amount_cents)} · {OUTCOME[n.outcome] ?? n.outcome}</span>
+                      <span key={i} style={{ display: 'block' }}>{when(n.created_at)} · {n.ds_response ?? '—'} · {eur(n.amount_cents)} · {OUTCOME[n.outcome] ?? n.outcome}</span>
                     ))}
                   </span>
                   {log.length > 0 && (<>

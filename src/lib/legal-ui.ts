@@ -11,7 +11,7 @@ export const LEGAL_LINKS: [string, string][] = [
 export const legalLinksHtml = () =>
   `<nav class="legal-links" aria-label="Información legal">${LEGAL_LINKS.map(([href, text]) => `<a href="${href}">${text}</a>`).join('')}</nav>`;
 
-// Los archivos están en /public/pagos: para usar los logos oficiales del banco basta con sustituirlos (mismo nombre).
+// Los archivos están en /public/pagos: para usar otros logos basta con sustituirlos (mismo nombre).
 export const paymentLogosHtml = () =>
   '<span class="pay-logos" role="img" aria-label="Se acepta el pago con tarjetas Visa y Mastercard">' +
   '<span class="pay-logo"><img src="/pagos/visa.svg" alt="" height="15"></span>' +

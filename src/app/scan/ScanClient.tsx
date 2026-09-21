@@ -14,12 +14,24 @@ const hhmm = (iso: string) => new Date(iso).toLocaleTimeString('es-ES', { timeZo
 const dayhm = (iso: string) => new Date(iso).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 const BANK_TEXT: Record<string, string> = {
   confirmed: 'pago confirmado', already: 'aviso repetido', cancelled: 'pago rechazado', reactivated: 'pago tardío confirmado',
-  amount_mismatch: 'importe distinto', not_found: 'pedido desconocido', ignored: 'ignorado', error: 'error'
+  amount_mismatch: 'importe distinto', not_found: 'pedido desconocido', ignored: 'ignorado', error: 'error',
+  expired: 'sesión de pago caducada, sin cobro', payment_failed: 'pago cancelado o rechazado, sin cobro', refunded: 'devuelto', pending_async: 'pago en proceso'
+};
+// Respuestas de la comprobación en Stripe (acción check_payment)
+const STRIPE_NOTE: Record<string, string> = {
+  stripe_open: 'Stripe dice que NO ha pagado todavía (su página de pago sigue abierta). No le dejes pasar hasta que pague.',
+  stripe_expired: 'Stripe dice que NO hubo cobro (la sesión de pago caducó o la canceló). No le dejes pasar.',
+  stripe_no_session: 'Esta compra no llegó a abrir la página de pago: no hay cobro que comprobar.',
+  stripe_mismatch: 'Stripe cobró un importe distinto del esperado: no se ha activado. Que lo revise el club.',
+  stripe_error: 'No se ha podido consultar Stripe ahora mismo. Inténtalo otra vez o usa el otro método.',
+  not_allowed: 'Esta entrada está anulada o devuelta: no le dejes pasar.'
 };
 
 export default function ScanClient({ canPanel = true }: { canPanel?: boolean }) {
   const scannerRef = useRef<any>(null);
   const busyRef = useRef(false); // evita procesar el mismo QR una y otra vez mientras sigue delante de la cámara
+  const codeRef = useRef(''); // último QR leído (para volver a validarlo tras comprobar el pago)
+  const [note, setNote] = useState('');
   const [result, setResult] = useState<Result | null>(null);
   const [cameraError, setCameraError] = useState('');
   const [working, setWorking] = useState(false);
@@ -38,6 +50,8 @@ export default function ScanClient({ canPanel = true }: { canPanel?: boolean }) 
           async (decodedText: string) => {
             if (busyRef.current) return;
             busyRef.current = true;
+            codeRef.current = decodedText;
+            setNote('');
             try { html5QrCode.pause(true); } catch { /* la cámara ya estaba parada */ }
             try {
               const res = await fetch('/api/tickets/validate', {
@@ -63,14 +77,35 @@ export default function ScanClient({ canPanel = true }: { canPanel?: boolean }) 
 
   function scanNext() {
     setResult(null);
+    setNote('');
     busyRef.current = false;
     try { scannerRef.current?.resume(); } catch { /* nada */ }
+  }
+
+  // Pregunta a Stripe si esa compra está cobrada. Si lo está, la entrada pasa a válida y se vuelve a validar el QR (entra a la primera).
+  async function checkStripe() {
+    const t = result?.ticket;
+    if (!t) return;
+    setWorking(true);
+    setNote('');
+    try {
+      const res = await fetch('/api/admin/tickets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: t.id, action: 'check_payment' }) });
+      const json = await res.json();
+      if (res.ok && (json.result === 'stripe_confirmed' || json.result === 'already')) {
+        const again = await fetch('/api/tickets/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ qr_code: codeRef.current }) });
+        setResult(await again.json());
+      } else if (res.ok) setNote(STRIPE_NOTE[json.result] || 'No se ha podido comprobar el pago.');
+      else setNote('No se ha podido comprobar el pago. Inténtalo otra vez.');
+    } catch {
+      setNote('Sin conexión. Vuelve a intentarlo.');
+    }
+    setWorking(false);
   }
 
   async function letIn() {
     const t = result?.ticket;
     if (!t) return;
-    const ok = window.confirm(`¿Has visto en el móvil del cliente el cargo de ${eur(t.amount_cents)} a COYOTE CLUB?\n\nSe le dará entrada y quedará anotado para que el club lo compruebe en Redsys después.`);
+    const ok = window.confirm(`¿Has visto en el móvil del cliente el cargo de ${eur(t.amount_cents)} a COYOTE CLUB?\n\nSe le dará entrada y quedará anotado para que el club lo compruebe en Stripe después.`);
     if (!ok) return;
     setWorking(true);
     try {
@@ -122,10 +157,10 @@ export default function ScanClient({ canPanel = true }: { canPanel?: boolean }) 
                 <span style={{ color: 'var(--text-dim)' }}>Pedido</span><span style={{ fontFamily: 'monospace' }}>{t.order_id || '—'}</span>
                 <span style={{ color: 'var(--text-dim)' }}>Iniciada</span><span>{dayhm(t.created_at)}</span>
                 {t.used_at && (<><span style={{ color: 'var(--text-dim)' }}>Usada</span><b>hoy a las {hhmm(t.used_at)}</b></>)}
-                <span style={{ color: 'var(--text-dim)' }}>Aviso del banco</span>
+                <span style={{ color: 'var(--text-dim)' }}>Avisos de Stripe</span>
                 <span>
                   {result.bank && result.bank.length > 0
-                    ? result.bank.map((b, i) => (<span key={i} style={{ display: 'block' }}>{b.ds_response === null ? '' : `código ${b.ds_response} · `}{BANK_TEXT[b.outcome] || b.outcome} · {eur(b.amount_cents)} · {dayhm(b.created_at)}</span>))
+                    ? result.bank.map((b, i) => (<span key={i} style={{ display: 'block' }}>{b.ds_response === null ? '' : `${b.ds_response} · `}{BANK_TEXT[b.outcome] || b.outcome} · {eur(b.amount_cents)} · {dayhm(b.created_at)}</span>))
                     : 'ninguno recibido'}
                 </span>
               </>)}
@@ -135,9 +170,14 @@ export default function ScanClient({ canPanel = true }: { canPanel?: boolean }) 
           {!result.valid && t && (t.status === 'pending' || (t.status === 'cancelled' && (!t.cancel_reason || t.cancel_reason === 'expired'))) && (
             <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.5 }}>
-                ¿Dice que ha pagado? Pídele que te enseñe en su app del banco el cargo de <b style={{ color: 'var(--text)' }}>{eur(t.amount_cents)}</b> a <b style={{ color: 'var(--text)' }}>COYOTE CLUB</b> de estos días.
+                ¿Dice que ha pagado? Pulsa el botón: se le pregunta a Stripe y, si está cobrado, entra al momento.
               </div>
-              <button className="btn" onClick={letIn} disabled={working}>{working ? 'Un momento…' : 'Le he visto el cargo → dar entrada'}</button>
+              <button className="btn" onClick={checkStripe} disabled={working}>{working ? 'Un momento…' : 'Comprobar el pago en Stripe'}</button>
+              {note && <div role="alert" style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.5, color: '#ffbe3c' }}>{note}</div>}
+              <div style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.5 }}>
+                Si no se puede comprobar, pídele que te enseñe en su app del banco el cargo de <b style={{ color: 'var(--text)' }}>{eur(t.amount_cents)}</b> a <b style={{ color: 'var(--text)' }}>COYOTE CLUB</b> de estos días.
+              </div>
+              <button className="btn-outline" onClick={letIn} disabled={working}>Le he visto el cargo → dar entrada</button>
             </div>
           )}
           {!result.valid && t?.status === 'used' && (

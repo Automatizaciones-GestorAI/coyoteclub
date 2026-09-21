@@ -15,7 +15,7 @@ type Tier = {
 };
 type Evt = { id: string; title: string; event_date: string; event_time: string | null };
 
-export default function EntradasClient({ tiers, events, paymentFailed, noUpcoming }: { tiers: Tier[]; events: Evt[]; paymentFailed?: boolean; noUpcoming?: boolean }) {
+export default function EntradasClient({ tiers, events, paymentFailed, paymentUnknown, noUpcoming }: { tiers: Tier[]; events: Evt[]; paymentFailed?: boolean; paymentUnknown?: boolean; noUpcoming?: boolean }) {
   const [openTier, setOpenTier] = useState<Tier | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -43,7 +43,7 @@ export default function EntradasClient({ tiers, events, paymentFailed, noUpcomin
     setLoading(true);
     setError('');
 
-    const res = await fetch('/api/checkout/redsys/create', {
+    const res = await fetch('/api/checkout/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -60,26 +60,15 @@ export default function EntradasClient({ tiers, events, paymentFailed, noUpcomin
     } catch {
       /* respuesta que no es JSON: se muestra el mensaje genérico */
     }
-    setLoading(false);
 
     if (!res.ok) {
+      setLoading(false);
       setError(json.error || 'No se pudo iniciar el pago. Inténtalo de nuevo en unos minutos.');
       return;
     }
 
-    // Redirige a Redsys enviando un formulario auto-generado (así lo exige su pasarela)
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = json.url;
-    for (const [key, value] of Object.entries(json.fields)) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = value as string;
-      form.appendChild(input);
-    }
-    document.body.appendChild(form);
-    form.submit();
+    // Lleva al cliente a la página de pago segura de Stripe (allí se le pide también su email para el recibo)
+    window.location.href = json.url;
   }
 
   // Noches que se ofrecen para el tramo abierto: las suyas si es de una noche concreta, o todas las que se pueden comprar.
@@ -92,6 +81,11 @@ export default function EntradasClient({ tiers, events, paymentFailed, noUpcomin
           <img src="/images/logo.png" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 60vw)', height: 'auto' }} />
         </a>
         <div className="display" style={{ fontSize: 'clamp(38px, 11vw, 48px)' }}>ENTRADAS</div>
+        {paymentUnknown && (
+          <div role="alert" style={{ margin: '16px auto 0', maxWidth: 480, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,190,60,0.6)', background: 'rgba(255,190,60,0.1)', color: '#ffcf6b', fontSize: 14, lineHeight: 1.5 }}>
+            No hemos podido comprobar tu pago ahora mismo. Si te han cobrado, no pagues otra vez: escríbenos por WhatsApp con tu nombre y teléfono y te damos tu entrada enseguida.
+          </div>
+        )}
         {paymentFailed && (
           <div role="alert" style={{ margin: '16px auto 0', maxWidth: 480, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,107,107,0.5)', background: 'rgba(255,107,107,0.1)', color: '#ff9b9b', fontSize: 14, lineHeight: 1.5 }}>
             El pago no se ha completado y no se ha cobrado nada. Puedes volver a intentarlo cuando quieras.
@@ -134,7 +128,7 @@ export default function EntradasClient({ tiers, events, paymentFailed, noUpcomin
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 13, color: 'var(--text-dim)', textAlign: 'center' }}>
         <span dangerouslySetInnerHTML={{ __html: paymentLogosHtml() }} />
-        <span>Pago seguro con tarjeta · Redsys · Precios con IVA incluido</span>
+        <span>Pago seguro con Stripe · Precios con IVA incluido</span>
       </div>
       <div dangerouslySetInnerHTML={{ __html: legalLinksHtml() }} />
 

@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 const CANCEL_TEXT: Record<string, string> = {
   expired: 'Reserva caducada: no llegó el pago',
-  payment_failed: 'Pago rechazado por el banco',
+  payment_failed: 'Pago cancelado o rechazado',
   refunded: 'Entrada devuelta (reembolsada)',
   manual: 'Entrada anulada por el club'
 };
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ valid: false, reason: 'Este QR no corresponde a ninguna entrada' });
   }
 
-  // Si no es válida, se adjunta lo que sabemos del banco para poder comprobarlo en el momento
+  // Si no es válida, se adjunta lo que sabemos del cobro para poder comprobarlo en el momento
   const invalid = async (reason: string) => {
     let bank: any[] = [];
     if (ticket.order_id) {
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
   if (ticket.status === 'used') return invalid('Ya se usó esta entrada');
   if (ticket.status === 'cancelled') return invalid(CANCEL_TEXT[ticket.cancel_reason as string] ?? 'Entrada anulada');
-  if (ticket.status !== 'valid') return invalid('Pago pendiente: el banco aún no lo ha confirmado');
+  if (ticket.status !== 'valid') return invalid('Pago pendiente: aún no está confirmado');
 
   // Se marca como usada solo si sigue "valid": si dos móviles la escanean a la vez, solo entra uno.
   const { data: updated, error: updError } = await supabaseAdmin
