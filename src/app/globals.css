@@ -1,3 +1,9 @@
+/* Fuentes alojadas en la propia web (licencia OFL): así no se envía la IP de cada visitante a Google. */
+@font-face { font-family: 'Bebas Neue'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/bebas-neue-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Bebas Neue'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/bebas-neue-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 300 700; font-display: swap; src: url(/fonts/space-grotesk-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 300 700; font-display: swap; src: url(/fonts/space-grotesk-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
 :root {
   --bg: #0b0b0c;
   --bg-alt: #151316;
@@ -248,3 +254,31 @@ button { cursor: pointer; font-family: inherit; }
 
 .admin-nav-user { font-size: 12px; color: var(--text-dim); padding: 14px 14px 0; line-height: 1.4; }
 @media (max-width: 820px) { .admin-nav-user { display: none; } }
+
+/* Logos de pago y enlaces legales */
+.pay-logos { display: inline-flex; align-items: center; gap: 8px; vertical-align: middle; }
+.pay-logo { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, 0.04); }
+.pay-logo img { display: block; width: auto; max-width: none; }
+.legal-links { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: center; font-size: 12px; color: var(--text-dim); }
+.legal-links a:hover { color: var(--text); text-decoration: underline; }
+
+/* Páginas legales */
+.legal { max-width: 760px; margin: 0 auto; font-size: 15px; line-height: 1.7; color: var(--text-dim); }
+.legal h1 { font-size: clamp(38px, 10vw, 56px); color: var(--text); line-height: 1; }
+.legal h2 { font-size: 26px; color: var(--text); margin: 36px 0 10px; line-height: 1.1; }
+.legal p, .legal li { margin: 0 0 12px; }
+.legal ul { padding-left: 20px; margin: 0 0 12px; }
+.legal a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.legal strong { color: var(--text); }
+.legal .legal-updated { font-size: 13px; margin: 8px 0 24px; }
+.legal-data { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 0 0 16px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-card); }
+.legal-data dt { color: var(--text); font-weight: 600; }
+.legal-data dd { margin: 0; overflow-wrap: anywhere; }
+.legal-todo { background: rgba(255, 190, 60, 0.16); color: #ffcf6b; padding: 0 6px; border-radius: 4px; font-weight: 600; }
+.legal-note { padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-card); color: var(--text); }
+.legal-foot { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line); }
+@media (max-width: 520px) {
+  .legal-data { grid-template-columns: 1fr; gap: 0; }
+  .legal-data dt { margin-top: 10px; }
+  .legal-data dt:first-child { margin-top: 0; }
+}

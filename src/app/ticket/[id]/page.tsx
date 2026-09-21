@@ -3,6 +3,7 @@ import { CLUB_WHATSAPP, siteBase, whatsappLink } from '@/lib/site';
 import QRCode from 'qrcode';
 import AutoRefresh from './AutoRefresh';
 import CopyLink from './CopyLink';
+import { LegalLinks } from '../../_legal/Bits';
 
 export const dynamic = 'force-dynamic';
 
@@ -145,6 +146,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
             <CopyLink url={url} />
           </div>
         )}
+        <LegalLinks />
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { esc, formatEventDate, formatPrice } from '@/lib/format';
 import { availability } from '@/lib/stock';
 import { expirePending } from '@/lib/stock-db';
+import { legalLinksHtml, paymentLogosHtml } from '@/lib/legal-ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -203,7 +204,7 @@ export default async function Home() {
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 24px; max-width: 1320px;">
       ${tiersHtml}
     </div>
-    <div style="font-size: 13px; color: var(--text-dim);">Pago seguro con tarjeta · Redsys</div>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 13px; color: var(--text-dim);">${paymentLogosHtml()}<span>Pago seguro con tarjeta · Redsys · Precios con IVA incluido</span></div>
   </div>
 
   <!-- GALERÍA -->
@@ -243,8 +244,12 @@ export default async function Home() {
         <a href="https://www.google.com/maps/search/?api=1&amp;query=${MAP_QUERY}" target="_blank" rel="noopener" class="btn-outline" style="font-size: 15px; padding: 16px 30px;">ABRIR EN GOOGLE MAPS</a>
       </div>
     </div>
-    <div style="position: relative; min-height: clamp(300px, 80vw, 420px); border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-card);">
-      <iframe title="Ubicación de Coyote Club en Google Maps" src="https://www.google.com/maps?q=${MAP_QUERY}&amp;output=embed&amp;hl=es" style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <div id="map-box" style="position: relative; min-height: clamp(300px, 80vw, 420px); border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-card); display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;">
+      <div id="map-gate" style="display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 360px; text-align: center;">
+        <div class="display" style="font-size: 30px; color: var(--text);">MAPA</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-dim);">Al pulsar, se carga el mapa de Google Maps y tu navegador se conecta con Google. <a href="/cookies" style="text-decoration: underline;">Más información</a></p>
+        <button type="button" id="map-load" class="btn" data-src="https://www.google.com/maps?q=${MAP_QUERY}&amp;output=embed&amp;hl=es">VER MAPA</button>
+      </div>
     </div>
   </div>
 
@@ -276,7 +281,9 @@ export default async function Home() {
       </div>
     </div>
   </div>
-  <div style="width: 100%; box-sizing: border-box; padding: 20px var(--px); border-top: 1px solid var(--line); text-align: center;">
+  <div style="width: 100%; box-sizing: border-box; padding: 20px var(--px) 28px; border-top: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;">
+    ${paymentLogosHtml()}
+    ${legalLinksHtml()}
     <div style="font-size: 12px; color: var(--text-dim);">© Coyote Club · Seseña, Toledo</div>
   </div>
 
@@ -363,6 +370,22 @@ export default async function Home() {
         });
       }
 
+      var mapBtn = document.getElementById('map-load');
+      var mapBox = document.getElementById('map-box');
+      if (mapBtn && mapBox) {
+        mapBtn.addEventListener('click', function () {
+          var f = document.createElement('iframe');
+          f.title = 'Ubicación de Coyote Club en Google Maps';
+          f.src = mapBtn.getAttribute('data-src');
+          f.setAttribute('allowfullscreen', '');
+          f.referrerPolicy = 'no-referrer-when-downgrade';
+          f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;';
+          mapBox.appendChild(f);
+          var gate = document.getElementById('map-gate');
+          if (gate) gate.style.display = 'none';
+        });
+      }
+
       var video = document.getElementById('logo-matte-video');
       var canvas = document.getElementById('logo-canvas');
       var box = document.getElementById('logo-box');
@@ -434,10 +457,6 @@ export default async function Home() {
 
   return (
     <>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-      />
       <style dangerouslySetInnerHTML={{ __html: pageCss }} />
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <script dangerouslySetInnerHTML={{ __html: pageScript }} />

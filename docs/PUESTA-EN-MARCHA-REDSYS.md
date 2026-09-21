@@ -20,13 +20,13 @@ cuando un pago se completa. Sin ella las entradas se quedarían pendientes.
 
 Suelen dar primero el entorno de **pruebas** y, cuando validan la web, el **real** (con otros datos).
 
-## 2. Lo que suelen revisar los bancos en la web (pendiente: necesita datos del titular)
+## 2. Lo que suelen revisar los bancos en la web
 
-Antes de activar el entorno real el banco revisa que la web muestre: datos del titular (nombre o razón social,
-NIF, dirección, email/teléfono), política de privacidad, condiciones de compra y devoluciones, cookies y los
-logotipos Visa/Mastercard, con precios con IVA incluido. **Aún no están creadas**: hacen falta los datos legales
-del titular y conviene que las revise un gestor. (Tratamos nombre y teléfono de los compradores: hay que
-informarles conforme al RGPD.)
+Antes de activar el entorno real el banco revisa que la web muestre: datos del titular (nombre o razón social, NIF,
+dirección, email/teléfono), política de privacidad, condiciones de compra y devoluciones, cookies, los logotipos
+Visa/Mastercard y precios con IVA incluido. **Todo eso ya está en la web** (`/aviso-legal`, `/privacidad`, `/condiciones`,
+`/cookies`, logos en el pie y en la compra). Solo faltan los **datos del titular**, que se rellenan en `src/lib/legal.ts`:
+ver `docs/TEXTOS-LEGALES.md`. Mientras falten, el panel (**Ventas**) lo avisa.
 
 ## 3. Variables en EasyPanel (servicio `coyote-club / web` → Entorno)
 
@@ -82,6 +82,6 @@ barato y devuélvela desde el módulo de administración de Redsys.
   servicio de consulta, se puede añadir.
 - **El comprador solo recibe su entrada en pantalla** (no hay email/SMS): la página le pide guardar el enlace o
   hacer una captura. Un envío por email requiere contratar un servicio de correo.
-- **Textos legales** (punto 2).
+- **Datos del titular en los textos legales** (punto 2).
 - La prueba completa con el aviso real de Redsys (`notify`) solo se puede hacer con la web ya publicada y las
   credenciales de pruebas del banco: por eso el paso 4.

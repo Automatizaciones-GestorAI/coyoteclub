@@ -9,6 +9,7 @@ import {
 } from '@/lib/redsys';
 import { reserveStock, releaseStock, expirePending } from '@/lib/stock-db';
 import { addHit, clientIp, retryAfter } from '@/lib/ratelimit';
+import { LEGAL } from '@/lib/legal';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PHONE = /^\+?[\d\s().-]{6,20}$/;
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
   if (name.length < 2 || name.length > 80) return fail('Escribe tu nombre', 400);
   if (!PHONE.test(phone)) return fail('Escribe un teléfono válido', 400);
   if (email && !EMAIL.test(email)) return fail('El email no es válido', 400);
+  if (body?.accepted_terms !== true) return fail('Debes aceptar las condiciones de compra y la política de privacidad', 400);
 
   let config;
   try {
@@ -100,6 +102,8 @@ export async function POST(req: NextRequest) {
     buyer_phone: phone,
     buyer_email: email,
     amount_cents: tier.price_cents,
+    terms_accepted_at: new Date().toISOString(),
+    terms_version: LEGAL.version,
     status: 'pending'
   });
   if (insertError) {

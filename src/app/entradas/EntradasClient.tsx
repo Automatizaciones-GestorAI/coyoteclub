@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { formatPrice } from '@/lib/format';
+import { legalLinksHtml, paymentLogosHtml } from '@/lib/legal-ui';
 
 type Tier = {
   id: string;
@@ -18,6 +19,7 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [eventId, setEventId] = useState('');
+  const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,12 +28,17 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
     setName('');
     setPhone('');
     setEventId(tier.event_id || '');
+    setAccepted(false);
     setError('');
   }
 
   async function submitPurchase(e: React.FormEvent) {
     e.preventDefault();
     if (!openTier) return;
+    if (!accepted) {
+      setError('Marca la casilla para aceptar las condiciones de compra y la política de privacidad.');
+      return;
+    }
     setLoading(true);
     setError('');
 
@@ -42,7 +49,8 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
         tier_id: openTier.id,
         event_id: eventId || null,
         buyer_name: name,
-        buyer_phone: phone
+        buyer_phone: phone,
+        accepted_terms: true
       })
     });
     let json: any = {};
@@ -118,7 +126,11 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>Pago seguro con tarjeta · Redsys</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 13, color: 'var(--text-dim)', textAlign: 'center' }}>
+        <span dangerouslySetInnerHTML={{ __html: paymentLogosHtml() }} />
+        <span>Pago seguro con tarjeta · Redsys · Precios con IVA incluido</span>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: legalLinksHtml() }} />
 
       {openTier && (
         <div
@@ -155,7 +167,26 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
                 </select>
               </div>
             )}
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, lineHeight: 1.5, color: 'var(--text-dim)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={accepted}
+                onChange={(e) => setAccepted(e.target.checked)}
+                required
+                style={{ width: 20, height: 20, padding: 0, marginTop: 1, flex: 'none', accentColor: 'var(--accent)' }}
+              />
+              <span>
+                He leído y acepto las{' '}
+                <a href="/condiciones" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>condiciones de compra</a> y la{' '}
+                <a href="/privacidad" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>política de privacidad</a>. Sé que las entradas{' '}
+                <strong style={{ color: 'var(--text)' }}>no admiten devolución</strong> salvo que se cancele el evento.
+              </span>
+            </label>
             {error && <div style={{ color: '#ff6b6b', fontSize: 13 }}>{error}</div>}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--text-dim)' }}>
+              <span dangerouslySetInnerHTML={{ __html: paymentLogosHtml() }} />
+              <span>Pago seguro · IVA incluido</span>
+            </div>
             <button className="btn" type="submit" disabled={loading}>
               {loading ? 'Redirigiendo a pago…' : 'Ir a pagar'}
             </button>

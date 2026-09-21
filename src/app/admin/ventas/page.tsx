@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { availability } from '@/lib/stock';
 import { getRedsysStatus } from '@/lib/redsys';
+import { legalMissing } from '@/lib/legal';
 import { getLastBankNotice, getReviewCount } from '@/lib/review';
 import AdminShell, { requireAdmin } from '../AdminShell';
 import LiveControls from './LiveControls';
@@ -94,6 +95,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     label: `${e.title} · ${dayLabel(e.event_date, { weekday: 'short', day: 'numeric', month: 'short' })}`
   }));
   const redsys = getRedsysStatus();
+  const legalPending = legalMissing();
   const [lastNotice, toReview] = await Promise.all([getLastBankNotice(), getReviewCount()]);
   const noticeText = lastNotice ? new Date(lastNotice).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null;
 
@@ -127,6 +129,18 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             )}
           </div>
         </div>
+
+        {legalPending.length > 0 && (
+          <div className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 18px', borderColor: 'rgba(255,190,60,0.5)' }}>
+            <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1.2, color: '#ffbe3c' }}>⚠</span>
+            <div style={{ fontSize: 14, lineHeight: 1.5 }}>
+              <strong>Textos legales: faltan datos por completar</strong>
+              <div style={{ color: 'var(--text-dim)' }}>
+                Aviso legal, privacidad y condiciones de compra tienen huecos: {legalPending.join('; ')}. El banco los pedirá antes de activar el cobro real.
+              </div>
+            </div>
+          </div>
+        )}
 
         {toReview > 0 && (
           <a href="/admin/entradas" className="card" style={{ borderColor: 'rgba(255,77,77,0.6)', display: 'block', fontSize: 14 }}>
