@@ -5,6 +5,11 @@ import { expirePending } from '@/lib/stock-db';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = {
+  title: 'Entradas · Coyote Club',
+  description: 'Compra online tu entrada para las noches de Coyote Club en Seseña (Toledo). Pago seguro con tarjeta.'
+};
+
 export default async function EntradasPage({ searchParams }: { searchParams: Promise<{ pago?: string }> }) {
   const { pago } = await searchParams;
   await expirePending(); // libera plazas de compras abandonadas

@@ -7,6 +7,8 @@ import { LegalLinks } from '../../_legal/Bits';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = { title: 'Tu entrada · Coyote Club' };
+
 const shell = {
   minHeight: '100vh',
   display: 'flex',

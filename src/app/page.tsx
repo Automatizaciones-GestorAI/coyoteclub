@@ -3,6 +3,7 @@ import { esc, formatEventDate, formatPrice } from '@/lib/format';
 import { availability } from '@/lib/stock';
 import { expirePending } from '@/lib/stock-db';
 import { legalLinksHtml, paymentLogosHtml } from '@/lib/legal-ui';
+import { CLUB_WHATSAPP, siteBase } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,7 @@ const MAP_QUERY = encodeURIComponent('Coyote Club, C. Trillo, 15, Seseña, Toled
 
 export default async function Home() {
   await expirePending();
+  const base = await siteBase();
   const [{ data: events }, { data: tiers }, { data: gallery }] = await Promise.all([
     supabaseAdmin
       .from('events')
@@ -455,8 +457,21 @@ export default async function Home() {
     })();
   `;
 
+  // Datos del negocio para Google (dirección, teléfono y horario). No se marcan reseñas: Google no las admite si las escribe el propio negocio.
+  const businessJson = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'NightClub',
+    name: 'Coyote Club',
+    ...(base ? { url: base, image: `${base}/images/share.jpg` } : {}),
+    telephone: `+${CLUB_WHATSAPP}`,
+    address: { '@type': 'PostalAddress', streetAddress: 'C. Trillo, 15', addressLocality: 'Seseña', addressRegion: 'Toledo', addressCountry: 'ES' },
+    openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Friday', 'Saturday'], opens: '00:00', closes: '06:00' }],
+    sameAs: ['https://instagram.com/coyotteclub']
+  }).replace(/</g, '\\u003c');
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: businessJson }} />
       <style dangerouslySetInnerHTML={{ __html: pageCss }} />
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <script dangerouslySetInnerHTML={{ __html: pageScript }} />

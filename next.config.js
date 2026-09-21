@@ -10,7 +10,7 @@ const securityHeaders = [
 ];
 
 // Lo que lleva datos privados (panel, API, entradas con QR) no se guarda en cachés compartidas.
-const noStore = [{ key: 'Cache-Control', value: 'no-store, max-age=0' }];
+const noStore = [{ key: 'Cache-Control', value: 'no-store, max-age=0' }, { key: 'X-Robots-Tag', value: 'noindex, nofollow' }];
 
 const nextConfig = {
   output: 'standalone',
