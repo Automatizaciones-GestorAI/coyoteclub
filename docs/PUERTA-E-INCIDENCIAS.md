@@ -42,7 +42,7 @@ módulo de administración de Redsys («Consulta de operaciones») y contesta:
 Hay que hacer **las dos cosas**, o el cliente podría entrar con la entrada de un dinero ya devuelto:
 
 1. **Devolver el dinero** en el módulo de administración de Redsys (la web no mueve dinero).
-2. En **Entradas**, en su ficha: **Anular… → «Anular (devuelta en Redsys)»**. La entrada deja de valer y la plaza vuelve al tramo.
+2. En **Entradas**, en su ficha: **Anular… → «Anular (devuelta en Redsys)»**. La entrada deja de valer y su plaza queda libre en esa noche.
 
 Una entrada que **ya ha entrado** no se puede anular.
 
@@ -57,3 +57,10 @@ aviso no activado en el banco…). Para eso:
 - Al cliente **nunca se le dice que no se ha cobrado** cuando no lo sabemos: se le da un WhatsApp con su número de pedido.
 - En **Ventas** figura la hora del **último aviso recibido del banco**. Si hay ventas y llevas días sin ver avisos nuevos, algo
   falla en la configuración de las notificaciones: avisa.
+
+## Aforo
+
+Cada noche tiene su **aforo** (personas), que se cambia en **Eventos → Editar** (por defecto 264, el aforo completo del local).
+En **Ventas** aparece cuántas plazas quedan de esa noche. Las entradas que se vendan en taquilla salen de ese mismo aforo,
+así que antes de vender en puerta mira las plazas libres. Si un pago llega tarde o se da entrada a mano con la noche completa,
+la entrada se respeta pero Ventas avisa de que se ha pasado el aforo.

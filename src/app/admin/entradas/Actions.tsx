@@ -13,9 +13,9 @@ async function call(id: string, action: string, note?: string): Promise<{ ok: bo
 }
 
 const MESSAGES: Record<string, string> = {
-  marked_paid: 'Hecho: entrada dada por pagada.', marked_paid_oversold: 'Hecho, pero ya no quedaban plazas del tramo: revisa el aforo.',
+  marked_paid: 'Hecho: entrada dada por pagada.', marked_paid_oversold: 'Hecho, pero esa noche o ese tramo ya estaba completo: se han dado entradas de más. Revisa el aforo en «Ventas».',
   cancelled: 'Entrada anulada.', already: 'Ya estaba así.', used: 'Marcada como usada.', not_valid: 'No estaba válida.',
-  let_in: 'Entrada dada a mano (queda por revisar).', let_in_oversold: 'Entrada dada a mano; ya no quedaban plazas del tramo.',
+  let_in: 'Entrada dada a mano (queda por revisar).', let_in_oversold: 'Entrada dada a mano; esa noche o ese tramo ya estaba completo.',
   already_used: 'Ya había entrado con esta entrada.', not_allowed: 'Esta entrada está anulada o devuelta: no se puede dar entrada.', reviewed: 'Marcado como revisado.', not_found: 'No se encontró.'
 };
 

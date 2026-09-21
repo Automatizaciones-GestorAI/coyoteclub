@@ -63,10 +63,10 @@ barato y devuélvela desde el módulo de administración de Redsys.
 
 ## Cómo funciona por dentro (por si algo no cuadra)
 
-- Al pulsar "Ir a pagar" se crea la entrada en estado **pending** y se **reserva una plaza** del tramo.
+- Al pulsar "Ir a pagar" se crea la entrada en estado **pending** y se **reserva una plaza** de esa noche y del tramo (solo si queda sitio: cada noche tiene su aforo y cada tramo su límite por noche).
 - Redsys avisa a `/api/checkout/redsys/notify` (firma verificada). Si el pago es correcto y el importe coincide,
-  pasa a **valid** y el QR ya sirve. Si lo rechazan, se **anula** y la plaza vuelve al tramo.
-- Una entrada `pending` que no se paga en **20 minutos** se anula sola y devuelve la plaza.
+  pasa a **valid** y el QR ya sirve. Si lo rechazan, se **anula** y la plaza queda libre.
+- Una entrada `pending` que no se paga en **20 minutos** se anula sola y libera la plaza.
 - Si el cliente paga justo después de que caduque, **se respeta el cobro** (la entrada pasa a válida).
 - La página de la entrada solo enseña el QR cuando el banco lo ha confirmado.
 - Los avisos de Redsys quedan en los logs del servicio (busca `redsys_notify`). Los que necesitan revisión

@@ -7,7 +7,8 @@ import {
   getRedsysConfig,
   RedsysNotConfiguredError
 } from '@/lib/redsys';
-import { reserveStock, releaseStock, expirePending } from '@/lib/stock-db';
+import { createPendingTicket, expirePending } from '@/lib/stock-db';
+import { upcomingCutoff } from '@/lib/stock';
 import { addHit, clientIp, retryAfter } from '@/lib/ratelimit';
 import { LEGAL } from '@/lib/legal';
 
@@ -21,7 +22,7 @@ const fail = (error: string, status: number) => NextResponse.json({ error }, { s
 
 // El comprador elige tramo + noche y pone nombre y teléfono. Creamos la entrada como "pending"
 // (sin valor hasta que el banco confirme el cobro) y lo redirigimos a Redsys. Cuando Redsys avisa a
-// /notify, la entrada pasa a "valid"; si el pago falla o caduca, se anula y la plaza vuelve al tramo.
+// /notify, la entrada pasa a "valid"; si el pago falla o caduca, se anula y deja de ocupar plaza.
 export async function POST(req: NextRequest) {
   const limitKey = `buy:${clientIp(req)}`;
   const wait = retryAfter(limitKey, BUY_LIMIT);
@@ -69,10 +70,12 @@ export async function POST(req: NextRequest) {
   }
 
   // La noche: debe existir y estar publicada. Si hay noches publicadas, hay que elegir una.
-  const { data: events } = await supabaseAdmin.from('events').select('id').eq('is_published', true);
+  const { data: events } = await supabaseAdmin.from('events').select('id,event_date').eq('is_published', true);
   const eventId = requestedEvent ?? tier.event_id ?? null;
   if (eventId) {
-    if (!events?.some((e) => e.id === eventId)) return fail('Esa noche no está disponible', 400);
+    const night = events?.find((e) => e.id === eventId);
+    if (!night) return fail('Esa noche no está disponible', 400);
+    if (night.event_date < upcomingCutoff()) return fail('Esa noche ya ha pasado', 400);
     if (tier.event_id && tier.event_id !== eventId) return fail('Este tramo no es de esa noche', 400);
   } else if (events && events.length > 0) {
     return fail('Elige la noche', 400);
@@ -90,26 +93,21 @@ export async function POST(req: NextRequest) {
     buyerName: name
   });
 
-  // Tramo con límite: se reserva una plaza de forma atómica.
-  if (!(await reserveStock(tier.id))) return fail('Este tramo está agotado', 409);
-
-  const { error: insertError } = await supabaseAdmin.from('tickets').insert({
-    qr_code: ticketToken,
-    order_id: orderId,
-    event_id: eventId,
-    tier_id: tier.id,
-    buyer_name: name,
-    buyer_phone: phone,
-    buyer_email: email,
-    amount_cents: tier.price_cents,
-    terms_accepted_at: new Date().toISOString(),
-    terms_version: LEGAL.version,
-    status: 'pending'
-  });
-  if (insertError) {
-    await releaseStock(tier.id);
-    console.error('[checkout] no se pudo crear la entrada:', insertError.message);
+  // Se guarda la entrada solo si queda sitio esa noche y en ese tramo (comprobación y alta en una sola operación atómica).
+  let created;
+  try {
+    created = await createPendingTicket({
+      event: eventId, tier: tier.id, qr: ticketToken, order: orderId, name, phone, email,
+      amount: tier.price_cents, termsVersion: LEGAL.version
+    });
+  } catch (e: any) {
+    console.error('[checkout] no se pudo crear la entrada:', e?.message ?? e);
     return fail('No se pudo iniciar el pago. Inténtalo de nuevo.', 500);
+  }
+  if (!created.ok) {
+    if (created.reason === 'night_full') return fail('Esta noche ya ha completado el aforo online. Prueba con otra noche o escríbenos por WhatsApp.', 409);
+    if (created.reason === 'tier_full') return fail('Este tramo está agotado para esa noche', 409);
+    return fail('No se pudo iniciar el pago. Inténtalo de nuevo.', 409);
   }
 
   return NextResponse.json({ url, fields });

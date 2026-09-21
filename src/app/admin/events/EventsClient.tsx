@@ -11,11 +11,17 @@ type Evt = {
   poster_url: string | null;
   is_published: boolean;
   sort_order: number;
+  capacity: number | null;
 };
+
+const BLANK = { title: '', dj: '', event_date: '', event_time: '', poster_url: '', capacity: '264' };
 
 export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }) {
   const [events, setEvents] = useState(initialEvents);
-  const [form, setForm] = useState({ title: '', dj: '', event_date: '', event_time: '', poster_url: '' });
+  const [form, setForm] = useState(BLANK);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ title: '', dj: '', event_date: '', event_time: '', capacity: '' });
+  const [notice, setNotice] = useState('');
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
 
@@ -32,14 +38,36 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
 
   async function createEvent(e: React.FormEvent) {
     e.preventDefault();
+    setNotice('');
     const res = await fetch('/api/admin/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
     });
     const created = await res.json();
+    if (!res.ok) return setNotice(created.error || 'No se pudo crear el evento.');
     setEvents((prev) => [...prev, created]);
-    setForm({ title: '', dj: '', event_date: '', event_time: '', poster_url: '' });
+    setForm(BLANK);
+  }
+
+  function startEdit(evt: Evt) {
+    setNotice('');
+    setEditing(evt.id);
+    setDraft({ title: evt.title, dj: evt.dj || '', event_date: evt.event_date, event_time: evt.event_time || '', capacity: evt.capacity === null ? '' : String(evt.capacity) });
+  }
+
+  async function saveEdit(evt: Evt) {
+    setNotice('');
+    const res = await fetch(`/api/admin/events/${evt.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...evt, ...draft })
+    });
+    const updated = await res.json();
+    if (!res.ok) return setNotice(updated.error || 'No se pudo guardar el evento.');
+    setEvents((prev) => prev.map((e) => (e.id === evt.id ? updated : e)));
+    setEditing(null);
+    setNotice('Cambios guardados. Ya se ven en la web.');
   }
 
   async function togglePublished(evt: Evt) {
@@ -49,6 +77,7 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
       body: JSON.stringify({ ...evt, is_published: !evt.is_published })
     });
     const updated = await res.json();
+    if (!res.ok) return setNotice(updated.error || 'No se pudo cambiar el evento.');
     setEvents((prev) => prev.map((e) => (e.id === evt.id ? updated : e)));
   }
 
@@ -61,6 +90,11 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       <h1 style={{ fontSize: 32, margin: 0 }}>Eventos</h1>
+      {notice && (
+        <div role="status" className="card" style={{ maxWidth: 700, padding: '12px 16px', fontSize: 14, borderColor: /no se pudo|no es válido/i.test(notice) ? 'rgba(255,190,60,0.6)' : 'rgba(46,204,113,0.5)' }}>
+          {notice}
+        </div>
+      )}
 
       <form onSubmit={createEvent} className="card grid-2" style={{ maxWidth: 700 }}>
         <div>
@@ -78,6 +112,11 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
         <div>
           <label className="label">Hora</label>
           <input value={form.event_time} onChange={(e) => setForm({ ...form, event_time: e.target.value })} placeholder="00:30" />
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label className="label">Aforo de la noche (personas)</label>
+          <input type="number" inputMode="numeric" min={0} step={1} value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} placeholder="Sin límite" />
+          <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 6 }}>Máximo de entradas online de esa noche (todos los tramos juntos). El aforo completo del local son 264.</div>
         </div>
         <div style={{ gridColumn: '1 / -1' }}>
           <label className="label">Cartel</label>
@@ -98,18 +137,43 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
             {evt.poster_url && (
               <img src={evt.poster_url} alt={evt.title} style={{ width: '100%', borderRadius: 10 }} />
             )}
-            <div style={{ fontWeight: 700 }}>{evt.title}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>{evt.dj}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
-              {evt.event_date} {evt.event_time}
-            </div>
+            {editing === evt.id ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div><label className="label">Título / noche</label><input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></div>
+                <div><label className="label">DJ / lineup</label><input value={draft.dj} onChange={(e) => setDraft({ ...draft, dj: e.target.value })} /></div>
+                <div><label className="label">Fecha</label><input type="date" value={draft.event_date} onChange={(e) => setDraft({ ...draft, event_date: e.target.value })} /></div>
+                <div><label className="label">Hora</label><input value={draft.event_time} onChange={(e) => setDraft({ ...draft, event_time: e.target.value })} /></div>
+                <div><label className="label">Aforo (personas)</label><input type="number" inputMode="numeric" min={0} step={1} value={draft.capacity} onChange={(e) => setDraft({ ...draft, capacity: e.target.value })} placeholder="Sin límite" /></div>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontWeight: 700 }}>{evt.title}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>{evt.dj}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
+                  {evt.event_date} {evt.event_time}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
+                  Aforo: <strong style={{ color: 'var(--text)' }}>{evt.capacity === null ? 'sin límite' : `${evt.capacity} personas`}</strong>
+                </div>
+              </>
+            )}
             <div className="actions">
-              <button className="btn-outline btn-sm" onClick={() => togglePublished(evt)}>
-                {evt.is_published ? 'Publicado' : 'Oculto'}
-              </button>
-              <button className="btn-outline btn-sm btn-danger" onClick={() => deleteEvent(evt.id)}>
-                Borrar
-              </button>
+              {editing === evt.id ? (
+                <>
+                  <button className="btn btn-sm" onClick={() => saveEdit(evt)}>Guardar</button>
+                  <button className="btn-outline btn-sm" onClick={() => setEditing(null)}>Cancelar</button>
+                </>
+              ) : (
+                <>
+                  <button className="btn-outline btn-sm" onClick={() => startEdit(evt)}>Editar</button>
+                  <button className="btn-outline btn-sm" onClick={() => togglePublished(evt)}>
+                    {evt.is_published ? 'Publicado' : 'Oculto'}
+                  </button>
+                  <button className="btn-outline btn-sm btn-danger" onClick={() => deleteEvent(evt.id)}>
+                    Borrar
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ))}

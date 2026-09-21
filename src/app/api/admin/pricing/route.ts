@@ -36,11 +36,11 @@ export async function POST(req: NextRequest) {
   if (!Number.isInteger(priceCents) || priceCents < 1 || priceCents > 200_000) return NextResponse.json({ error: 'El precio no es válido' }, { status: 400 });
   if (!KINDS.includes(kind)) return NextResponse.json({ error: 'Tipo de tramo no válido' }, { status: 400 });
 
-  // Entradas disponibles: vacío = sin límite. La taquilla nunca lleva contador.
-  let stock: number | null = null;
-  if (kind !== 'door' && body?.stock !== null && body?.stock !== undefined && body?.stock !== '') {
-    stock = Math.floor(Number(body.stock));
-    if (!Number.isFinite(stock) || stock < 0) return NextResponse.json({ error: 'El número de entradas no es válido' }, { status: 400 });
+  // Entradas por noche: vacío = sin límite. La taquilla nunca lleva límite.
+  let nightLimit: number | null = null;
+  if (kind !== 'door' && body?.night_limit !== null && body?.night_limit !== undefined && body?.night_limit !== '') {
+    nightLimit = Math.floor(Number(body.night_limit));
+    if (!Number.isFinite(nightLimit) || nightLimit < 0 || nightLimit > 100_000) return NextResponse.json({ error: 'El número de entradas por noche no es válido' }, { status: 400 });
   }
 
   const { data: last } = await supabaseAdmin.from('price_tiers').select('sort_order').order('sort_order', { ascending: false }).limit(1);
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('price_tiers')
-    .insert({ label, description: description || null, price_cents: priceCents, kind, is_active: true, sort_order: sortOrder, stock })
+    .insert({ label, description: description || null, price_cents: priceCents, kind, is_active: true, sort_order: sortOrder, night_limit: nightLimit })
     .select()
     .single();
   if (error) {

@@ -8,18 +8,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const body = await req.json();
 
-  // El stock baja solo con cada venta: solo se actualiza si el panel lo envía a propósito
-  // (null = sin límite), para no pisar el valor real con uno antiguo al editar otro campo.
-  const stockChange: { stock?: number | null } = {};
-  if ('stock' in body) {
-    if (body.stock === null || body.stock === '') {
-      stockChange.stock = null;
+  // Entradas por noche (null = sin límite). Solo se actualiza si el panel lo envía.
+  const limitChange: { night_limit?: number | null } = {};
+  if ('night_limit' in body) {
+    if (body.night_limit === null || body.night_limit === '') {
+      limitChange.night_limit = null;
     } else {
-      const n = Math.floor(Number(body.stock));
-      if (!Number.isFinite(n) || n < 0) {
+      const n = Math.floor(Number(body.night_limit));
+      if (!Number.isFinite(n) || n < 0 || n > 100_000) {
         return NextResponse.json({ error: 'Número de entradas no válido' }, { status: 400 });
       }
-      stockChange.stock = n;
+      limitChange.night_limit = n;
     }
   }
 
@@ -32,7 +31,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       kind: body.kind,
       is_active: body.is_active,
       sort_order: body.sort_order,
-      ...stockChange
+      ...limitChange
     })
     .eq('id', id)
     .select()

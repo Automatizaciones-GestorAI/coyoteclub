@@ -11,10 +11,11 @@ type Tier = {
   kind: 'online' | 'door' | 'standing';
   event_id: string | null;
   availability: 'ok' | 'low' | 'soldout';
+  nights: Record<string, 'ok' | 'low' | 'soldout'>; // estado de este tramo en cada noche
 };
 type Evt = { id: string; title: string; event_date: string; event_time: string | null };
 
-export default function EntradasClient({ tiers, events, paymentFailed }: { tiers: Tier[]; events: Evt[]; paymentFailed?: boolean }) {
+export default function EntradasClient({ tiers, events, paymentFailed, noUpcoming }: { tiers: Tier[]; events: Evt[]; paymentFailed?: boolean; noUpcoming?: boolean }) {
   const [openTier, setOpenTier] = useState<Tier | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -81,6 +82,9 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
     form.submit();
   }
 
+  // Noches que se ofrecen para el tramo abierto: las suyas si es de una noche concreta, o todas las que se pueden comprar.
+  const nightsForTier = openTier ? events.filter((ev) => !openTier.event_id || ev.id === openTier.event_id) : [];
+
   return (
     <div style={{ minHeight: '100vh', padding: 'clamp(28px, 8vw, 64px) 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>
       <div style={{ textAlign: 'center' }}>
@@ -101,7 +105,7 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 20, width: '100%', maxWidth: 1100 }}>
         {tiers.map((tier) => (
-          <div key={tier.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, opacity: tier.availability === 'soldout' ? 0.6 : 1 }}>
+          <div key={tier.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, opacity: tier.availability === 'soldout' || noUpcoming ? 0.6 : 1 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 6, minHeight: 26 }}>
                 <div className="label" style={{ margin: 0, color: tier.kind === 'door' ? 'var(--text-dim)' : 'var(--accent)' }}>
@@ -116,6 +120,8 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
             </div>
             {tier.kind === 'door' ? (
               <div className="btn-outline" style={{ textAlign: 'center' }}>Pago en caja</div>
+            ) : noUpcoming ? (
+              <div className="btn-outline" style={{ textAlign: 'center' }}>Próximamente</div>
             ) : tier.availability === 'soldout' ? (
               <div className="btn-outline" style={{ textAlign: 'center' }}>Agotado</div>
             ) : (
@@ -154,16 +160,19 @@ export default function EntradasClient({ tiers, events, paymentFailed }: { tiers
               <label className="label">Teléfono</label>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} required />
             </div>
-            {events.length > 0 && (
+            {nightsForTier.length > 0 && (
               <div>
                 <label className="label">Noche</label>
                 <select value={eventId} onChange={(e) => setEventId(e.target.value)} required>
                   <option value="" disabled>Elige la noche</option>
-                  {events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>
-                      {ev.title} ({ev.event_date})
-                    </option>
-                  ))}
+                  {nightsForTier.map((ev) => {
+                    const st = openTier.nights[ev.id];
+                    return (
+                      <option key={ev.id} value={ev.id} disabled={st === 'soldout'}>
+                        {ev.title} ({ev.event_date}){st === 'soldout' ? ' · Agotada' : st === 'low' ? ' · Quedan pocas' : ''}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             )}

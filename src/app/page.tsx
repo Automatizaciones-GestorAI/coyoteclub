@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { esc, formatEventDate, formatPrice } from '@/lib/format';
-import { availability } from '@/lib/stock';
-import { expirePending } from '@/lib/stock-db';
+import { bestAvailability, isUpcoming, nightsFor, tierAvailability, type Availability, type NightInfo } from '@/lib/stock';
+import { expirePending, getUsage } from '@/lib/stock-db';
 import { legalLinksHtml, paymentLogosHtml } from '@/lib/legal-ui';
 import { CLUB_WHATSAPP, siteBase } from '@/lib/site';
 
@@ -13,7 +13,7 @@ const MAP_QUERY = encodeURIComponent('Coyote Club, C. Trillo, 15, Seseña, Toled
 export default async function Home() {
   await expirePending();
   const base = await siteBase();
-  const [{ data: events }, { data: tiers }, { data: gallery }] = await Promise.all([
+  const [{ data: events }, { data: tiers }, { data: gallery }, usage] = await Promise.all([
     supabaseAdmin
       .from('events')
       .select('*')
@@ -24,8 +24,14 @@ export default async function Home() {
       .select('*')
       .eq('is_active', true)
       .order('sort_order', { ascending: true }),
-    supabaseAdmin.from('gallery_images').select('*').order('sort_order', { ascending: true })
+    supabaseAdmin.from('gallery_images').select('*').order('sort_order', { ascending: true }),
+    getUsage()
   ]);
+
+  // Aforo por noche: solo cuentan las noches que aún se pueden comprar (la web nunca enseña números, solo el estado).
+  const published = events || [];
+  const upcomingNights: NightInfo[] = published.filter((e) => isUpcoming(e.event_date)).map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
+  const noUpcoming = published.length > 0 && upcomingNights.length === 0;
 
   const eventsHtml = (events || [])
     .map((evt, i) => {
@@ -53,16 +59,23 @@ export default async function Home() {
   const tiersHtml = (tiers || [])
     .map((tier) => {
       const price = formatPrice(tier.price_cents);
-      const state = availability(tier); // solo el estado sale al HTML, nunca el número
+      const state: Availability | 'soon' =
+        tier.kind === 'door'
+          ? 'ok'
+          : noUpcoming
+            ? 'soon'
+            : bestAvailability(nightsFor(tier, upcomingNights, published.length > 0).map((n) => tierAvailability(tier, n, usage)));
       const cta =
         tier.kind === 'door'
           ? `<div class="btn-outline" style="text-align: center;">Pago en caja</div>`
-          : state === 'soldout'
-            ? `<div class="btn-outline" style="text-align: center;">Agotado</div>`
-            : `<a href="/entradas" class="btn" style="text-align: center;">${tier.kind === 'standing' ? 'Comprar' : 'Comprar entrada'}</a>`;
+          : state === 'soon'
+            ? `<div class="btn-outline" style="text-align: center;">Próximamente</div>`
+            : state === 'soldout'
+              ? `<div class="btn-outline" style="text-align: center;">Agotado</div>`
+              : `<a href="/entradas" class="btn" style="text-align: center;">${tier.kind === 'standing' ? 'Comprar' : 'Comprar entrada'}</a>`;
       const badge = state === 'low' ? `<span class="badge-low">Quedan pocas</span>` : '';
       return `
-      <div style="display: flex; flex-direction: column; gap: 24px; padding: clamp(28px, 6vw, 44px) clamp(22px, 5vw, 32px); border-radius: 20px; background: var(--bg-card); border: 1px solid var(--line);${state === 'soldout' ? ' opacity: 0.6;' : ''}">
+      <div style="display: flex; flex-direction: column; gap: 24px; padding: clamp(28px, 6vw, 44px) clamp(22px, 5vw, 32px); border-radius: 20px; background: var(--bg-card); border: 1px solid var(--line);${state === 'soldout' || state === 'soon' ? ' opacity: 0.6;' : ''}">
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; min-height: 26px;">
             <div style="font-size: 14px; font-weight: 700; letter-spacing: 0.1em; color: ${tier.kind === 'door' ? 'var(--text-dim)' : ACCENT};">${esc(tier.label)}</div>

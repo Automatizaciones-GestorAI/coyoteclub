@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase';
-import { availability } from '@/lib/stock';
+import { availabilityOf, isUpcoming, slotsLeft } from '@/lib/stock';
+import { getUsage } from '@/lib/stock-db';
 import { getRedsysStatus } from '@/lib/redsys';
 import { legalMissing } from '@/lib/legal';
 import { getLastBankNotice, getReviewCount } from '@/lib/review';
@@ -14,7 +15,7 @@ const madridDay = (iso: string | Date) => new Date(iso).toLocaleDateString('sv-S
 const addDays = (day: string, n: number) => new Date(new Date(day + 'T12:00:00Z').getTime() + n * 86400000).toISOString().slice(0, 10);
 const dayLabel = (day: string, opts: Intl.DateTimeFormatOptions) => new Date(day + 'T12:00:00Z').toLocaleDateString('es-ES', { ...opts, timeZone: 'UTC' });
 
-type Evt = { id: string; title: string; event_date: string; event_time: string | null };
+type Evt = { id: string; title: string; event_date: string; event_time: string | null; capacity: number | null };
 
 // PostgREST devuelve como mucho 1000 filas por petición: se pide por páginas para no truncar los totales.
 async function fetchTickets(eventId: string) {
@@ -38,9 +39,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   await requireAdmin();
   const { event: requested } = await searchParams;
 
-  const [{ data: eventsData }, { data: tiersData }] = await Promise.all([
-    supabaseAdmin.from('events').select('id,title,event_date,event_time').order('event_date', { ascending: false }).limit(40),
-    supabaseAdmin.from('price_tiers').select('*').order('sort_order')
+  const [{ data: eventsData }, { data: tiersData }, usage] = await Promise.all([
+    supabaseAdmin.from('events').select('id,title,event_date,event_time,capacity').order('event_date', { ascending: false }).limit(40),
+    supabaseAdmin.from('price_tiers').select('*').order('sort_order'),
+    getUsage()
   ]);
   const events: Evt[] = eventsData || [];
   const tiers: any[] = (tiersData || []).filter((t) => t.kind !== 'door');
@@ -63,9 +65,19 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const pending = tickets.filter((t) => t.status === 'pending').length;
 
   // Por tramo (los de taquilla no pasan por la web)
+  const perNight = selected !== 'all' && !!selectedEvent;
   const byTier = tiers.map((tier) => {
     const mine = paid.filter((t) => t.tier_id === tier.id);
-    return { tier, count: mine.length, cents: mine.reduce((s, t) => s + amountOf(t), 0), state: availability(tier) };
+    // Lo que queda a la venta esa noche: el menor entre el límite del tramo y el aforo de la noche
+    const left = perNight ? slotsLeft(tier, { id: selectedEvent!.id, capacity: selectedEvent!.capacity }, usage) : null;
+    return { tier, count: mine.length, cents: mine.reduce((s, t) => s + amountOf(t), 0), left, state: availabilityOf(left) };
+  });
+
+  // Aforo: una noche concreta, o todas las próximas si se miran todas juntas
+  const nightRows = (perNight ? [selectedEvent!] : selected === 'all' ? events.filter((e) => isUpcoming(e.event_date)) : []).map((e) => {
+    const used = usage.night[e.id] ?? 0;
+    const cap = e.capacity ?? null;
+    return { e, used, cap, free: cap === null ? null : Math.max(0, cap - used), over: cap !== null && used > cap };
   });
 
   // Por día: desde la primera venta hasta la noche (o hasta hoy, si aún no ha llegado)
@@ -178,6 +190,44 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           </div>
         </div>
 
+        {nightRows.length > 0 && (
+          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <h2 style={{ fontSize: 22, margin: 0 }}>Aforo</h2>
+            {nightRows.map(({ e, used, cap, free, over }) => {
+              const pct = cap === null ? 0 : cap === 0 ? 100 : Math.min(100, Math.round((used / cap) * 100));
+              const hot = over || pct >= 90;
+              return (
+                <div key={e.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: '4px 16px' }}>
+                    <div style={{ fontWeight: 700 }}>
+                      {e.title} <span style={{ fontWeight: 400, color: 'var(--text-dim)', fontSize: 13 }}>· {dayLabel(e.event_date, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                    </div>
+                    <div className="display" style={{ fontSize: 30, lineHeight: 1 }}>
+                      {used}
+                      <span style={{ color: 'var(--text-dim)' }}>{cap === null ? '' : ` / ${cap}`}</span>
+                    </div>
+                  </div>
+                  {cap !== null && (
+                    <div role="progressbar" aria-valuemin={0} aria-valuemax={cap} aria-valuenow={Math.min(used, cap)} aria-label={`Aforo de ${e.title}`} style={{ height: 10, borderRadius: 999, background: 'var(--line)', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: over ? '#ff4d4d' : hot ? '#ffbe3c' : 'var(--accent)' }} />
+                    </div>
+                  )}
+                  <div style={{ fontSize: 13, color: over ? '#ff9b9b' : 'var(--text-dim)' }}>
+                    {cap === null
+                      ? 'Sin límite de aforo en esta noche.'
+                      : over
+                        ? `⚠ Se han dado ${used - cap} entradas de más sobre el aforo (pagos tardíos o entradas dadas a mano). Revisa «Entradas».`
+                        : free === 0
+                          ? 'Aforo completo: ya no se venden más entradas online ni quedan plazas para taquilla.'
+                          : `Quedan ${free} plazas de ${cap}. Lo que se venda en taquilla sale de este mismo aforo.`}
+                    {perNight && pending > 0 ? ` Incluye ${pending} ${pending === 1 ? 'reserva pendiente' : 'reservas pendientes'} de pago.` : ''}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="card">
           <h2 style={{ fontSize: 22, marginBottom: 12 }}>Por tramo</h2>
           <div className="table-wrap">
@@ -187,21 +237,23 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                   <th>Tramo</th>
                   <th className="num">Vendidas</th>
                   <th className="num">Importe</th>
-                  <th className="num">Quedan</th>
+                  <th className="num">{perNight ? 'Quedan' : 'Límite por noche'}</th>
                 </tr>
               </thead>
               <tbody>
-                {byTier.map(({ tier, count, cents, state }) => (
+                {byTier.map(({ tier, count, cents, left, state }) => (
                   <tr key={tier.id}>
                     <td data-label="Tramo" className="stack-title">{tier.label}</td>
                     <td data-label="Vendidas" className="num">{count}</td>
                     <td data-label="Importe" className="num">{eur(cents)}</td>
-                    <td data-label="Quedan" className="num">
-                      {tier.stock === null || tier.stock === undefined ? (
+                    <td data-label={perNight ? 'Quedan' : 'Límite por noche'} className="num">
+                      {!perNight ? (
+                        <span style={{ color: 'var(--text-dim)' }}>{tier.night_limit == null ? 'Sin límite' : tier.night_limit}</span>
+                      ) : left === null ? (
                         <span style={{ color: 'var(--text-dim)' }}>Sin límite</span>
                       ) : (
                         <>
-                          {tier.stock} {state === 'low' && <span className="badge-low badge-xs">Pocas</span>}
+                          {left} {state === 'low' && <span className="badge-low badge-xs">Pocas</span>}
                           {state === 'soldout' && <span className="badge-low badge-xs badge-red">Agotado</span>}
                         </>
                       )}
@@ -212,7 +264,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             </table>
           </div>
           <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--text-dim)' }}>
-            «Quedan» es lo que queda ahora a la venta online de cada tramo. Lo que se cobre en taquilla no pasa por la web y no aparece aquí.
+            {perNight
+              ? '«Quedan» es lo que queda a la venta online de cada tramo esta noche (el menor entre el límite del tramo y el aforo de la noche). '
+              : 'Los límites de cada tramo valen por noche: elige una noche arriba para ver lo que queda. '}
+            Lo que se cobre en taquilla no pasa por la web y no aparece aquí.
           </p>
         </div>
 

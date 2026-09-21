@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { LOW_STOCK, availability } from '@/lib/stock';
+import { LOW_STOCK } from '@/lib/stock';
 
 type Tier = {
   id: string;
@@ -10,13 +10,13 @@ type Tier = {
   kind: string;
   is_active: boolean;
   sort_order: number;
-  stock?: number | null;
+  night_limit?: number | null;
 };
 
-const EMPTY = { label: '', description: '', price: '', kind: 'online', stock: '' };
+const EMPTY = { label: '', description: '', price: '', kind: 'online', night_limit: '' };
 const euros = (v: string) => Number(String(v).trim().replace(',', '.'));
 
-export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }) {
+export default function PricingClient({ initialTiers, stats }: { initialTiers: Tier[]; stats: Record<string, { label: string; n: number }[]> }) {
   const [tiers, setTiers] = useState(initialTiers);
   const [form, setForm] = useState(EMPTY);
   const [open, setOpen] = useState(false);
@@ -27,22 +27,19 @@ export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }
   async function updateTier(tier: Tier, changes: Partial<Tier>) {
     const updated = { ...tier, ...changes };
     setTiers((prev) => prev.map((t) => (t.id === tier.id ? updated : t)));
-    // El stock baja solo con cada venta: solo se envía si se ha cambiado a propósito, para no
-    // pisar con un valor antiguo el que haya ahora mismo en la base de datos.
-    const { stock: _stock, ...withoutStock } = updated;
     await fetch(`/api/admin/pricing/${tier.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify('stock' in changes ? updated : withoutStock)
+      body: JSON.stringify(updated)
     });
   }
 
-  function saveStock(tier: Tier, raw: string) {
+  function saveLimit(tier: Tier, raw: string) {
     const value = raw.trim();
     const next = value === '' ? null : Math.max(0, Math.floor(Number(value)));
     if (next !== null && !Number.isFinite(next)) return;
-    if (next === (tier.stock ?? null)) return;
-    updateTier(tier, { stock: next });
+    if (next === (tier.night_limit ?? null)) return;
+    updateTier(tier, { night_limit: next });
   }
 
   async function addTier(e: React.FormEvent) {
@@ -55,7 +52,7 @@ export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }
       const res = await fetch('/api/admin/pricing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: form.label, description: form.description, price_cents: Math.round(price * 100), kind: form.kind, stock: form.kind === 'door' ? null : form.stock })
+        body: JSON.stringify({ label: form.label, description: form.description, price_cents: Math.round(price * 100), kind: form.kind, night_limit: form.kind === 'door' ? null : form.night_limit })
       });
       const json = await res.json();
       if (!res.ok) setNotice(json.error || 'No se pudo crear el tramo.');
@@ -105,10 +102,11 @@ export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }
           «Activo / Oculto» quita un tramo de la venta sin borrarlo.
         </p>
         <p style={{ margin: 0 }}>
-          <strong style={{ color: 'var(--text)' }}>Disponibles:</strong> escribe cuántas entradas quedan de
-          ese tramo; baja sola con cada venta. Déjalo vacío si no quieres poner límite. La web no
-          enseña el número: avisa con «Quedan pocas» cuando quedan {LOW_STOCK} o menos y con
-          «Agotado» cuando llega a 0.
+          <strong style={{ color: 'var(--text)' }}>Entradas por noche:</strong> el máximo de entradas de ese tramo que se
+          venden cada noche (el viernes y el sábado cuentan por separado). Déjalo vacío si no quieres poner límite.
+          Además cada noche tiene un <strong style={{ color: 'var(--text)' }}>aforo total</strong> del local, que se cambia en
+          «Eventos». La web no enseña números: avisa con «Quedan pocas» cuando a esa noche le quedan {LOW_STOCK} plazas o menos
+          y con «Agotado» cuando llega a 0.
         </p>
       </div>
 
@@ -143,8 +141,8 @@ export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }
             </div>
             {form.kind !== 'door' && (
               <div>
-                <label className="label" htmlFor="nt-stock">Entradas disponibles</label>
-                <input id="nt-stock" type="number" inputMode="numeric" min={0} step={1} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="Sin límite" />
+                <label className="label" htmlFor="nt-stock">Entradas por noche</label>
+                <input id="nt-stock" type="number" inputMode="numeric" min={0} step={1} value={form.night_limit} onChange={(e) => setForm({ ...form, night_limit: e.target.value })} placeholder="Sin límite" />
               </div>
             )}
           </div>
@@ -156,7 +154,6 @@ export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 900 }}>
         {sorted.map((tier, index) => {
-          const state = availability(tier);
           return (
             <div key={tier.id} className="card pricing-row">
               <div className="span-2">
@@ -188,28 +185,34 @@ export default function PricingClient({ initialTiers }: { initialTiers: Tier[] }
               <div>
                 {tier.kind === 'door' ? (
                   <>
-                    <label className="label">Disponibles</label>
+                    <label className="label">Entradas por noche</label>
                     <div style={{ color: 'var(--text-dim)', fontSize: 13, padding: '13px 0' }}>Sin límite</div>
                   </>
                 ) : (
                   <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <label className="label" style={{ margin: 0 }}>Disponibles</label>
-                      {state === 'low' && <span className="badge-low badge-xs">Pocas</span>}
-                      {state === 'soldout' && <span className="badge-low badge-xs badge-red">Agotado</span>}
-                    </div>
+                    <label className="label">Entradas por noche</label>
                     <input
                       type="number"
                       inputMode="numeric"
                       min={0}
                       step={1}
                       placeholder="Sin límite"
-                      defaultValue={tier.stock ?? ''}
-                      onBlur={(e) => saveStock(tier, e.target.value)}
+                      defaultValue={tier.night_limit ?? ''}
+                      onBlur={(e) => saveLimit(tier, e.target.value)}
                     />
                   </>
                 )}
               </div>
+              {tier.kind !== 'door' && (stats[tier.id] || []).length > 0 && (
+                <div className="span-all" style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.6 }}>
+                  Llevan {(stats[tier.id] || []).map((x, i) => (
+                    <span key={i}>
+                      {i > 0 ? ' · ' : ''}
+                      <strong style={{ color: 'var(--text)' }}>{x.n}{tier.night_limit != null ? ` de ${tier.night_limit}` : ''}</strong> {x.label}
+                    </span>
+                  ))}
+                </div>
+              )}
               <button
                 className={(tier.is_active ? 'btn-outline btn-sm' : 'btn-outline btn-sm btn-danger') + ' span-2'}
                 onClick={() => updateTier(tier, { is_active: !tier.is_active })}
