@@ -14,6 +14,6 @@ export const legalLinksHtml = () =>
 // Los archivos están en /public/pagos: para usar los logos oficiales del banco basta con sustituirlos (mismo nombre).
 export const paymentLogosHtml = () =>
   '<span class="pay-logos" role="img" aria-label="Se acepta el pago con tarjetas Visa y Mastercard">' +
-  '<span class="pay-logo"><img src="/pagos/visa.svg" alt="" height="14"></span>' +
-  '<span class="pay-logo"><img class="mc" src="/pagos/mastercard.svg" alt="" height="20"></span>' +
+  '<span class="pay-logo"><img src="/pagos/visa.svg" alt="" height="15"></span>' +
+  '<span class="pay-logo"><img class="mc" src="/pagos/mastercard.svg" alt="" height="22"></span>' +
   '</span>';

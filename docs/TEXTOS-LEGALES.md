@@ -44,9 +44,9 @@ reclamaciones y al derecho de admisión (normativa de Castilla-La Mancha) y que 
 
 ## Logos de pago
 
-Están en `public/pagos/visa.svg` y `public/pagos/mastercard.svg` (iconos de uso libre, en color claro para el fondo oscuro).
-Si el banco entrega su kit de logos oficiales, basta con **sustituir esos archivos manteniendo el nombre**. El logo de Redsys
-lo facilita el banco: se puede añadir en `src/lib/legal-ui.ts`.
+Están en `public/pagos/visa.svg` (Visa, marca vigente desde 2021) y `public/pagos/mastercard.svg` (círculos de Mastercard),
+en color y sobre una pastilla blanca. Si el banco entrega su kit de logos oficiales, basta con **sustituir esos archivos
+manteniendo el nombre**. El logo de Redsys lo facilita el banco: se puede añadir en `src/lib/legal-ui.ts`.
 
 ## Pendiente conocido
 
