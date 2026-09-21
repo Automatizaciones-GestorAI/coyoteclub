@@ -1,0 +1,9 @@
+-- Esquema BASE de Coyote Club (tablas creadas antes de las migraciones de supabase/migrations).
+-- Para reconstruir la base de datos en un proyecto NUEVO: 1) este archivo, 2) las migraciones en orden alfabético, 3) restore.js.
+-- Es el mismo esquema con el que se probó la restauración completa (ver docs/COPIAS-DE-SEGURIDAD.md).
+
+create table public.events (id uuid primary key default gen_random_uuid(), title text not null, dj text, event_date date not null, event_time text, poster_url text, is_published boolean not null default true, sort_order integer not null default 0, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create table public.price_tiers (id uuid primary key default gen_random_uuid(), event_id uuid references public.events(id), label text not null, description text, price_cents integer not null, kind text not null default 'online' check (kind = any (array['online','door','standing'])), is_active boolean not null default true, sort_order integer not null default 0, created_at timestamptz not null default now());
+create table public.gallery_images (id uuid primary key default gen_random_uuid(), url text not null, alt text, sort_order integer not null default 0, created_at timestamptz not null default now());
+create table public.tickets (id uuid primary key default gen_random_uuid(), event_id uuid references public.events(id), tier_id uuid references public.price_tiers(id), buyer_name text, buyer_phone text, buyer_email text, qr_code text not null unique, status text not null default 'valid' constraint tickets_status_check check (status = any (array['valid','used','cancelled'])), used_at timestamptz, created_at timestamptz not null default now());
+create index idx_price_tiers_event on public.price_tiers(event_id); create index idx_tickets_qr_code on public.tickets(qr_code);
