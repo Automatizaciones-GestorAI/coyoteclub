@@ -1,7 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase';
-import { esc, formatEventDate, formatPrice } from '@/lib/format';
-import { bestAvailability, isUpcoming, nightsFor, tierAvailability, type Availability, type NightInfo } from '@/lib/stock';
-import { expirePending, getUsage } from '@/lib/stock-db';
+import { esc, formatEventDate } from '@/lib/format';
+import { isUpcoming } from '@/lib/stock';
 import { legalLinksHtml, paymentLogosHtml } from '@/lib/legal-ui';
 import { CLUB_WHATSAPP, SITE_URL } from '@/lib/site';
 
@@ -11,8 +10,7 @@ const ACCENT = '#ff149c';
 const MAP_QUERY = encodeURIComponent('Coyote Club, C. Trillo, 15, Seseña, Toledo');
 
 export default async function Home() {
-  await expirePending();
-  const [{ data: events }, { data: tiers }, { data: gallery }, usage] = await Promise.all([
+  const [{ data: events }, { data: tiers }, { data: gallery }] = await Promise.all([
     supabaseAdmin
       .from('events')
       .select('*')
@@ -23,19 +21,8 @@ export default async function Home() {
       .select('*')
       .eq('is_active', true)
       .order('sort_order', { ascending: true }),
-    supabaseAdmin.from('gallery_images').select('*').order('sort_order', { ascending: true }),
-    getUsage()
+    supabaseAdmin.from('gallery_images').select('*').order('sort_order', { ascending: true })
   ]);
-
-  // Aforo por noche: solo cuentan las noches que aún se pueden comprar online. En una noche de entrada
-  // gratuita, solo cuentan para los tramos de "consumición" (bonos de copas, ofertas...): los de "entrada"
-  // no tienen nada que vender ahí, la entrada ya es gratis (el control en puerta es manual, como el pago
-  // en taquilla).
-  const published = events || [];
-  const allUpcoming = published.filter((e) => isUpcoming(e.event_date));
-  const paidNights: NightInfo[] = allUpcoming.filter((e) => !e.free_entry).map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
-  const allNights: NightInfo[] = allUpcoming.map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
-  const noUpcoming = published.length > 0 && allUpcoming.length === 0;
 
   const eventsHtml = (events || [])
     .map((evt, i) => {
@@ -43,58 +30,19 @@ export default async function Home() {
       const sub = [evt.dj, evt.event_time].filter(Boolean).join(' · ');
       const poster = evt.poster_url || '';
       const revealClass = i % 3 === 1 ? 'reveal reveal-d1' : i % 3 === 2 ? 'reveal reveal-d2' : 'reveal';
-      // Noche de entrada gratuita: se sigue enlazando a /entradas (puede haber ofertas de consumición para
-      // esa noche), con esa noche ya elegida, pero con otro texto: no hace falta "apuntarse" a nada.
-      const cta = evt.free_entry
-        ? `<a href="/entradas?evento=${evt.id}" class="btn-outline event-cta">Entrada gratuita →</a>`
-        : `<a href="/entradas?evento=${evt.id}" class="btn event-cta">Apúntate →</a>`;
+      // La compra se hace toda en /entradas (nav de arriba y botón del hero); aquí solo se informa. En una
+      // noche de entrada gratuita, un sello lo deja claro sin necesidad de enlazar a ningún sitio.
       return `
       <div class="${revealClass}" style="display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--line);">
         <div style="position: relative; width: 100%; background: var(--bg-alt); border-bottom: 1px solid var(--line); min-height: 200px;">
           ${poster ? `<img src="${esc(poster)}" alt="${esc(evt.title)}" loading="lazy" decoding="async" style="width: 100%; height: auto; display: block;">` : ''}
           <div style="position: absolute; top: 16px; left: 16px; background: ${ACCENT}; color: #0b0b0c; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; padding: 8px 14px; border-radius: 999px;">${esc(badge)}</div>
+          ${evt.free_entry ? `<div style="position: absolute; top: 16px; right: 16px; background: #2ecc71; color: #0b0b0c; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; padding: 8px 14px; border-radius: 999px;">GRATIS</div>` : ''}
         </div>
-        <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 24px; padding: clamp(20px, 5vw, 32px); flex-grow: 1;">
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div class="display" style="font-size: 36px; color: var(--text);">${esc(evt.title)}</div>
-            <div style="font-size: 15px; color: var(--text-dim);">${esc(sub)}</div>
-          </div>
-          ${cta}
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: clamp(20px, 5vw, 32px);">
+          <div class="display" style="font-size: 36px; color: var(--text);">${esc(evt.title)}</div>
+          <div style="font-size: 15px; color: var(--text-dim);">${esc(sub)}</div>
         </div>
-      </div>`;
-    })
-    .join('');
-
-  const tiersHtml = (tiers || [])
-    .map((tier) => {
-      const price = formatPrice(tier.price_cents);
-      const offered = tier.category === 'consumicion' ? allNights : paidNights;
-      const state: Availability | 'soon' =
-        tier.kind === 'door'
-          ? 'ok'
-          : noUpcoming
-            ? 'soon'
-            : bestAvailability(nightsFor(tier, offered, published.length > 0).map((n) => tierAvailability(tier, n, usage)));
-      const cta =
-        tier.kind === 'door'
-          ? `<div class="btn-outline" style="text-align: center;">Pago en caja</div>`
-          : state === 'soon'
-            ? `<div class="btn-outline" style="text-align: center;">Próximamente</div>`
-            : state === 'soldout'
-              ? `<div class="btn-outline" style="text-align: center;">Agotado</div>`
-              : `<a href="/entradas" class="btn" style="text-align: center;">${tier.kind === 'standing' ? 'Comprar' : 'Comprar entrada'}</a>`;
-      const badge = state === 'low' ? `<span class="badge-low">Quedan pocas</span>` : '';
-      return `
-      <div style="display: flex; flex-direction: column; gap: 24px; padding: clamp(28px, 6vw, 44px) clamp(22px, 5vw, 32px); border-radius: 20px; background: var(--bg-card); border: 1px solid var(--line);${state === 'soldout' || state === 'soon' ? ' opacity: 0.6;' : ''}">
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; min-height: 26px;">
-            <div style="font-size: 14px; font-weight: 700; letter-spacing: 0.1em; color: ${tier.kind === 'door' ? 'var(--text-dim)' : ACCENT};">${esc(tier.label)}</div>
-            ${badge}
-          </div>
-          <div class="display" style="font-size: 52px; color: var(--text);">${price}</div>
-          <div style="font-size: 15px; color: var(--text-dim);">${esc(tier.description)}</div>
-        </div>
-        ${cta}
       </div>`;
     })
     .join('');
@@ -216,18 +164,6 @@ export default async function Home() {
     </div>
   </div>
 
-  <!-- ENTRADAS -->
-  <div id="entradas-preview" style="width: 100%; box-sizing: border-box; padding: 0 var(--px) clamp(64px, 12vw, 120px) var(--px); display: flex; flex-direction: column; gap: 40px;">
-    <div style="display: flex; flex-direction: column; gap: 16px; max-width: 760px;">
-      <h2 style="margin: 0; font-size: clamp(34px, 9vw, 56px); color: var(--text);">ENTRADAS</h2>
-      <p style="margin: 0; font-size: 17px; line-height: 1.6; color: var(--text-dim);">Asegura tu entrada online. El precio sube según se acerca la fecha, así que cuanto antes la compres, menos pagas.</p>
-    </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 24px; max-width: 1320px;">
-      ${tiersHtml}
-    </div>
-    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 13px; color: var(--text-dim);">${paymentLogosHtml()}<span>Pago seguro con Stripe · Precios con IVA incluido</span></div>
-  </div>
-
   <!-- GALERÍA -->
   <div id="galeria" style="width: 100%; box-sizing: border-box; padding: 0 0 8px 0; display: flex; flex-direction: column; gap: 24px;">
     <div style="padding: 0 var(--px); display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px;">
@@ -322,7 +258,6 @@ export default async function Home() {
     .stat-mid{border-left:1px solid var(--line);border-right:1px solid var(--line);padding-left:24px;}
     .stat-last{padding-left:24px;}
     .club-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;}
-    .event-cta{align-self:flex-start;}
     .gallery-wrap{padding:0 var(--px);display:flex;flex-wrap:wrap;gap:4px;justify-content:center;}
     .gallery-item{height:380px;max-width:100%;overflow:hidden;}
     .gallery-item img{height:100%;width:auto;max-width:100%;object-fit:cover;display:block;}
@@ -350,7 +285,6 @@ export default async function Home() {
       .stat-mid{border-left:0;border-right:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-left:0;}
       .stat-last{padding-left:0;}
       .cta-row > a,.cta-row > div{flex:1 1 100%;}
-      .event-cta{align-self:stretch;}
       .gallery-wrap{gap:6px;}
       .gallery-item{height:auto;aspect-ratio:1/1;flex:1 1 calc(50% - 6px);max-width:calc(50% - 3px);}
       .gallery-item img{width:100%;height:100%;}
@@ -425,29 +359,35 @@ export default async function Home() {
   // Una noche por evento publicado y aún por venir: así Google puede enseñar la fecha, el cartel y el enlace
   // de compra directamente en el buscador (resultado enriquecido de eventos), no solo la ficha del local.
   // Precio de referencia de cada noche: el tramo online más barato que valga para esa noche (el propio de la noche, si lo
-  // tiene, o si no cualquiera de los que valen para todas). Google pide un precio en la oferta del evento; con tramos que
-  // suben de precio según se venden, se enseña "desde" el más bajo disponible ahora mismo, nunca uno inventado.
+  // tiene, o si no cualquiera de los que valen para todas). En una noche de entrada gratuita solo cuentan los
+  // tramos de "consumición" (los de "entrada" no se venden ahí, la entrada ya es gratis): se enseña ese precio
+  // si hay alguno, o si no, Google se entera de que la entrada es gratis (isAccessibleForFree), nunca un precio
+  // inventado. Con tramos que suben de precio según se venden, se enseña "desde" el más bajo disponible ahora.
   const onlineTiers = (tiers || []).filter((t) => t.kind !== 'door' && t.is_active);
-  const lowestPriceFor = (eventId: string) => {
-    const forThis = onlineTiers.filter((t) => !t.event_id || t.event_id === eventId);
-    const pool = forThis.length ? forThis : onlineTiers;
+  const lowestPriceFor = (eventId: string, freeEntry: boolean) => {
+    const forThis = onlineTiers.filter((t) => (!t.event_id || t.event_id === eventId) && (!freeEntry || t.category === 'consumicion'));
+    const pool = forThis.length ? forThis : freeEntry ? [] : onlineTiers;
     return pool.length ? Math.min(...pool.map((t) => t.price_cents)) / 100 : null;
   };
 
   const eventJsonList = (events || [])
     .filter((e) => isUpcoming(e.event_date))
-    .map((e) => ({
-      '@context': 'https://schema.org',
-      '@type': 'Event',
-      name: e.title,
-      startDate: e.event_time ? `${e.event_date}T${e.event_time}` : e.event_date,
-      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-      eventStatus: 'https://schema.org/EventScheduled',
-      location: { '@id': `${SITE_URL}/#club`, name: 'Coyote Club', address: clubPlace.address },
-      ...(e.poster_url ? { image: [`${SITE_URL}${e.poster_url}`] } : {}),
-      ...(e.dj ? { performer: { '@type': 'PerformingGroup', name: e.dj } } : {}),
-      offers: { '@type': 'Offer', url: `${SITE_URL}/entradas`, priceCurrency: 'EUR', availability: 'https://schema.org/InStock', ...(lowestPriceFor(e.id) !== null ? { price: lowestPriceFor(e.id)!.toFixed(2) } : {}) }
-    }));
+    .map((e) => {
+      const price = lowestPriceFor(e.id, e.free_entry);
+      return {
+        '@context': 'https://schema.org',
+        '@type': 'Event',
+        name: e.title,
+        startDate: e.event_time ? `${e.event_date}T${e.event_time}` : e.event_date,
+        eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+        eventStatus: 'https://schema.org/EventScheduled',
+        location: { '@id': `${SITE_URL}/#club`, name: 'Coyote Club', address: clubPlace.address },
+        ...(e.poster_url ? { image: [`${SITE_URL}${e.poster_url}`] } : {}),
+        ...(e.dj ? { performer: { '@type': 'PerformingGroup', name: e.dj } } : {}),
+        ...(e.free_entry ? { isAccessibleForFree: true } : {}),
+        offers: { '@type': 'Offer', url: `${SITE_URL}/entradas`, priceCurrency: 'EUR', availability: 'https://schema.org/InStock', ...(price !== null ? { price: price.toFixed(2) } : {}) }
+      };
+    });
 
   // No se marcan reseñas: Google no las admite si las escribe el propio negocio.
   const jsonLdBlocks = [{ '@context': 'https://schema.org', ...clubPlace }, ...eventJsonList].map((o) => JSON.stringify(o).replace(/</g, '\\u003c'));
