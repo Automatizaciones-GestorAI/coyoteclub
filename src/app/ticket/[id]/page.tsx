@@ -24,7 +24,9 @@ function Message({ title, text, refresh, cta, help }: { title: string; text: str
       {/* Mientras el pago no se confirma, la página se actualiza sola cada pocos segundos */}
       {refresh && <AutoRefresh />}
       <div className="card" style={{ width: 'min(340px, 100%)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <img src="/images/logo.webp" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 70%)', height: 'auto', margin: '0 auto' }} />
+        <a href="/" aria-label="Coyote Club - Inicio" style={{ display: 'block', margin: '0 auto' }}>
+          <img src="/images/logo.webp" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 70%)', height: 'auto', margin: '0 auto' }} />
+        </a>
         <div className="display" style={{ fontSize: 28 }}>{title}</div>
         <div style={{ fontSize: 14, color: 'var(--text-dim)', lineHeight: 1.5 }}>{text}</div>
         {help && (
@@ -113,7 +115,9 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
           boxShadow: '0 0 40px rgba(255,20,156,0.18)'
         }}
       >
-        <img src="/images/logo.webp" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 70%)', height: 'auto', margin: '0 auto' }} />
+        <a href="/" aria-label="Coyote Club - Inicio" style={{ display: 'block', margin: '0 auto' }}>
+          <img src="/images/logo.webp" alt="Coyote Club" style={{ display: 'block', width: 'min(200px, 70%)', height: 'auto', margin: '0 auto' }} />
+        </a>
         <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>Seseña Viejo, Toledo</div>
 
         {used && (
