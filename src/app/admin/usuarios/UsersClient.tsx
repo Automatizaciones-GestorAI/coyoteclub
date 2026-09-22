@@ -99,6 +99,21 @@ export function UserActions({ id, me, role, manage, active, username }: { id: st
     setBusy(false);
   }
 
+  async function remove() {
+    if (!window.confirm(`¿Borrar a ${username} de verdad?\n\nDeja de poder entrar (como al desactivar), pero además desaparece de esta lista. Lo que haya hecho (entradas escaneadas, cobros dados por buenos...) queda igual en el historial, con su nombre. No se puede deshacer.`)) return;
+    setBusy(true);
+    setMsg('');
+    try {
+      const res = await fetch('/api/admin/users', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      const json = await res.json();
+      if (res.ok) router.refresh();
+      else setMsg(json.error || 'No se pudo borrar el usuario.');
+    } catch {
+      setMsg('Sin conexión. Vuelve a intentarlo.');
+    }
+    setBusy(false);
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div className="actions" style={{ justifyContent: 'flex-start' }}>
@@ -109,6 +124,7 @@ export function UserActions({ id, me, role, manage, active, username }: { id: st
             {role === 'admin' && (
               <button className="btn-outline btn-sm" disabled={busy} onClick={() => patch('set_manage', !manage, manage ? `¿Quitar a ${username} el permiso para gestionar usuarios?` : `¿Dar a ${username} permiso para gestionar usuarios?`)}>{manage ? 'Quitar gestión de usuarios' : 'Dar gestión de usuarios'}</button>
             )}
+            <button className="btn-outline btn-sm btn-danger" disabled={busy} onClick={remove}>Borrar usuario</button>
           </>
         )}
       </div>

@@ -82,3 +82,28 @@ export async function PATCH(req: NextRequest) {
   if (!data) return fail('Usuario no encontrado.', 404);
   return NextResponse.json(data);
 }
+
+// Borrar un usuario de verdad (no solo desactivarlo). El nombre queda igualmente en el historial (ticket_audit.actor,
+// tickets.used_by son texto, no una referencia): lo que hizo esa persona no desaparece, solo su acceso.
+export async function DELETE(req: NextRequest) {
+  const { session, denied } = await managerGuard();
+  if (denied) return denied;
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return fail('Petición no válida', 400);
+  }
+  const id = String(body?.id ?? '');
+  if (!UUID.test(id)) return fail('Petición no válida', 400);
+  if (id === session.id) return fail('No puedes borrar tu propio usuario. Pídeselo a otra persona con ese permiso.', 400);
+
+  const { error, count } = await supabaseAdmin.from('admin_users').delete({ count: 'exact' }).eq('id', id);
+  if (error) {
+    if (error.code === 'P0001') return fail('Debe quedar al menos un usuario activo que pueda gestionar usuarios: desactívalo o dale antes ese permiso a otra persona.', 409);
+    console.error('[users] no se pudo borrar', error.message);
+    return fail('No se pudo borrar el usuario.', 500);
+  }
+  if (!count) return fail('Usuario no encontrado.', 404);
+  return NextResponse.json({ ok: true });
+}

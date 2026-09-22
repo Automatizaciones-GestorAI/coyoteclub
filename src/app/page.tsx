@@ -301,6 +301,7 @@ export default async function Home() {
     ${paymentLogosHtml()}
     ${legalLinksHtml()}
     <div style="font-size: 12px; color: var(--text-dim);">© Coyote Club · Seseña, Toledo</div>
+    <div style="font-size: 12px; color: var(--text-dim);">Página web realizada por <a href="https://gestor-ai.es" target="_blank" rel="noopener" style="color: var(--text-dim); text-decoration: underline; text-underline-offset: 2px;">GestorAI</a></div>
   </div>
 
 </div>`;
