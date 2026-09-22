@@ -28,7 +28,10 @@ export default function AdminNav({ alerts = 0, role = 'admin', manager = false, 
   return (
     <nav className="admin-nav">
       <Link href={role === 'door' ? '/scan' : '/admin/ventas'} className="admin-nav-logo" aria-label="Coyote Club - Panel">
-        <img src="/images/logo.webp" alt="Coyote Club" />
+        {/* En el sidebar de escritorio hay sitio de sobra: se ve el zorro encima del nombre. En la barra estrecha
+            del móvil se queda solo el nombre (como antes), para no hacer esa barra más alta de lo necesario. */}
+        <img className="logo-full" src="/images/logo-admin.webp" alt="Coyote Club" />
+        <img className="logo-compact" src="/images/logo.webp" alt="Coyote Club" />
       </Link>
       <div className="admin-nav-links">
         {items.map((item) => (

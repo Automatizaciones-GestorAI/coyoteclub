@@ -44,7 +44,7 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="card" style={{ width: 'min(340px, 100%)', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div style={{ textAlign: 'center' }}>
           <img
-            src="/images/logo.webp"
+            src="/images/logo-admin.webp"
             alt="Coyote Club"
             style={{ display: 'block', width: 'min(220px, 70%)', height: 'auto', margin: '0 auto 14px' }}
           />

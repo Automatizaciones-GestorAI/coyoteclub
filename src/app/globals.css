@@ -156,7 +156,9 @@ button { cursor: pointer; font-family: inherit; }
   background: var(--bg-alt);
 }
 .admin-nav-logo { display: block; margin-bottom: 28px; }
-.admin-nav-logo img { display: block; width: 150px; height: auto; }
+.admin-nav-logo img { display: block; }
+.admin-nav-logo .logo-full { width: 150px; height: auto; }
+.admin-nav-logo .logo-compact { display: none; }
 .admin-nav-links { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .admin-link {
   padding: 11px 14px;
@@ -200,7 +202,8 @@ button { cursor: pointer; font-family: inherit; }
     gap: 8px 12px;
   }
   .admin-nav-logo { grid-area: logo; margin: 0; }
-  .admin-nav-logo img { width: 112px; }
+  .admin-nav-logo .logo-full { display: none; }
+  .admin-nav-logo .logo-compact { display: block; width: 112px; height: auto; }
   .admin-nav-logout { grid-area: logout; margin: 0; padding: 9px 16px; font-size: 13px; }
   .admin-nav-links {
     grid-area: links;
