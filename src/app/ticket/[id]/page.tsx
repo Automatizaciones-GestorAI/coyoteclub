@@ -140,12 +140,18 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
         </div>
 
         <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>
-          Muestra este QR en la entrada. <b style={{ color: 'var(--text)' }}>Guárdala ahora</b>: haz una captura o envíate el enlace, porque no podemos enviártela por otro medio.
+          Muestra este QR en la entrada.
         </div>
         {!used && (
-          <div className="actions">
-            <a href={shareHref} target="_blank" rel="noopener" className="btn btn-sm">Enviármela por WhatsApp</a>
-            <CopyLink url={url} />
+          <div style={{ border: '1px solid rgba(255,190,60,0.5)', background: 'rgba(255,190,60,0.08)', borderRadius: 12, padding: 12, fontSize: 13, lineHeight: 1.5, textAlign: 'left' }}>
+            <b style={{ color: '#ffcf6b' }}>⚠ Guarda esta entrada ahora</b>
+            <div style={{ marginTop: 4 }}>
+              Envíatela por WhatsApp o haz una captura de pantalla. Si pierdes el enlace, no podemos volver a mandártelo solos: tendrías que escribirnos por WhatsApp con tu nombre y el número de pedido.
+            </div>
+            <div className="actions" style={{ marginTop: 10 }}>
+              <a href={shareHref} target="_blank" rel="noopener" className="btn btn-sm">Enviármela por WhatsApp</a>
+              <CopyLink url={url} />
+            </div>
           </div>
         )}
         <LegalLinks />

@@ -2,7 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { availabilityOf, isUpcoming, slotsLeft } from '@/lib/stock';
 import { getUsage } from '@/lib/stock-db';
 import { getStripeStatus } from '@/lib/stripe';
-import { legalMissing } from '@/lib/legal';
+import { legalStatus } from '@/lib/legal';
 import { getLastBankNotice, getReviewCount } from '@/lib/review';
 import AdminShell, { requireAdmin } from '../AdminShell';
 import LiveControls from './LiveControls';
@@ -110,7 +110,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     label: `${e.title} · ${dayLabel(e.event_date, { weekday: 'short', day: 'numeric', month: 'short' })}`
   }));
   const stripe = getStripeStatus();
-  const legalPending = legalMissing();
+  const legal = legalStatus();
   const [lastNotice, toReview] = await Promise.all([getLastBankNotice(), getReviewCount()]);
   const noticeText = lastNotice ? new Date(lastNotice).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null;
 
@@ -145,14 +145,26 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           </div>
         </div>
 
-        {legalPending.length > 0 && (
+        {!legal.ok && (
           <div className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 18px', borderColor: 'rgba(255,190,60,0.5)' }}>
             <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1.2, color: '#ffbe3c' }}>⚠</span>
             <div style={{ fontSize: 14, lineHeight: 1.5 }}>
-              <strong>Textos legales: faltan datos por completar</strong>
-              <div style={{ color: 'var(--text-dim)' }}>
-                Aviso legal, privacidad y condiciones de compra tienen huecos: {legalPending.join('; ')}. Stripe y la ley los piden antes de cobrar de verdad.
-              </div>
+              {legal.missingFields.length > 0 ? (
+                <>
+                  <strong>Textos legales: faltan datos por completar</strong>
+                  <div style={{ color: 'var(--text-dim)' }}>
+                    Aviso legal, privacidad y condiciones de compra tienen huecos: {legal.missingFields.join('; ')}. Stripe y la ley los piden antes de cobrar de verdad.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <strong>Textos legales: solo falta tu confirmación</strong>
+                  <div style={{ color: 'var(--text-dim)' }}>
+                    Los datos del titular ya están puestos. Cuando tú (o tu gestor) hayáis revisado la edad mínima (18 años), el plazo de devolución (14 días)
+                    y el resto de los textos, pon <code>LEGAL_CONFIRMED=true</code> en EasyPanel y despliega para quitar este aviso.
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

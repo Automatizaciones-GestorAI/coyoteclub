@@ -41,7 +41,11 @@ export const LEGAL_FIELDS: { key: 'holderName' | 'holderTaxId' | 'holderAddress'
 ];
 
 export function legalMissing(): string[] {
-  const out = LEGAL_FIELDS.filter((f) => !LEGAL[f.key].trim()).map((f) => f.label);
-  if (!LEGAL.holderConfirmed) out.push('revisión del titular (edad mínima, plazo de devolución y textos)');
-  return out;
+  return LEGAL_FIELDS.filter((f) => !LEGAL[f.key].trim()).map((f) => f.label);
+}
+
+// Estado para el aviso del panel (Ventas): distingue «faltan datos» (urgente) de «solo falta tu ok» (ya está casi listo).
+export function legalStatus(): { ok: boolean; missingFields: string[]; needsConfirm: boolean } {
+  const missingFields = legalMissing();
+  return { ok: missingFields.length === 0 && LEGAL.holderConfirmed, missingFields, needsConfirm: missingFields.length === 0 && !LEGAL.holderConfirmed };
 }
