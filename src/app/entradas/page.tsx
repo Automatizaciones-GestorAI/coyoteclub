@@ -22,15 +22,16 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
 
   const { data: events } = await supabaseAdmin
     .from('events')
-    .select('id, title, event_date, event_time, capacity')
+    .select('id, title, event_date, event_time, capacity, free_entry')
     .eq('is_published', true)
     .order('sort_order');
 
   // Aforo por noche: solo se ofrecen las noches que aún se pueden comprar. El número de entradas que
   // quedan no sale del servidor: solo el estado de cada tramo en cada noche (ok / low / soldout).
+  // Las noches de entrada gratuita no entran aquí: no hay nada que comprar para ellas.
   const usage = await getUsage();
   const published = events || [];
-  const upcoming = published.filter((e) => isUpcoming(e.event_date));
+  const upcoming = published.filter((e) => isUpcoming(e.event_date) && !e.free_entry);
   const nightInfos: NightInfo[] = upcoming.map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
   const publicTiers = (tiers || []).map(({ stock, night_limit, ...tier }) => {
     const nights = nightsFor(tier, nightInfos, published.length > 0);

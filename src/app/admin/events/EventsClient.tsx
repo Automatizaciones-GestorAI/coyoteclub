@@ -11,6 +11,7 @@ type Evt = {
   event_time: string | null;
   poster_url: string | null;
   is_published: boolean;
+  free_entry: boolean;
   sort_order: number;
   capacity: number | null;
 };
@@ -82,6 +83,17 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
     setEvents((prev) => prev.map((e) => (e.id === evt.id ? updated : e)));
   }
 
+  async function toggleFreeEntry(evt: Evt) {
+    const res = await fetch(`/api/admin/events/${evt.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...evt, free_entry: !evt.free_entry })
+    });
+    const updated = await res.json();
+    if (!res.ok) return setNotice(updated.error || 'No se pudo cambiar el evento.');
+    setEvents((prev) => prev.map((e) => (e.id === evt.id ? updated : e)));
+  }
+
   async function deleteEvent(id: string) {
     if (!confirm('¿Borrar este evento? Si ya tuvo ventas, mejor ocúltalo en vez de borrarlo: las entradas vendidas se quedan pero pierden la noche a la que pertenecían.')) return;
     await fetch(`/api/admin/events/${id}`, { method: 'DELETE' });
@@ -108,7 +120,10 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
           </div>
         ) : (
           <>
-            <div style={{ fontWeight: 700 }}>{evt.title}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ fontWeight: 700 }}>{evt.title}</div>
+              {evt.free_entry && <span className="badge-low badge-green">Entrada gratis</span>}
+            </div>
             <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>{evt.dj}</div>
             <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
               {evt.event_date} {evt.event_time}
@@ -129,6 +144,9 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
               <button className="btn-outline btn-sm" onClick={() => startEdit(evt)}>Editar</button>
               <button className="btn-outline btn-sm" onClick={() => togglePublished(evt)}>
                 {evt.is_published ? 'Publicado' : 'Oculto'}
+              </button>
+              <button className="btn-outline btn-sm" onClick={() => toggleFreeEntry(evt)} title="Mientras esté activo, esta noche no se puede comprar online: no se llama a Stripe para nada de ella.">
+                {evt.free_entry ? 'Entrada gratis' : 'De pago'}
               </button>
               <button className="btn-outline btn-sm btn-danger" onClick={() => deleteEvent(evt.id)}>
                 Borrar

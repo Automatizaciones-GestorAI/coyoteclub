@@ -27,6 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       event_time: body.event_time || null,
       poster_url: body.poster_url || null,
       is_published: body.is_published,
+      free_entry: body.free_entry,
       sort_order: body.sort_order,
       ...('value' in cap ? { capacity: cap.value } : {}),
       updated_at: new Date().toISOString()

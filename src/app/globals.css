@@ -95,6 +95,7 @@ button { cursor: pointer; font-family: inherit; }
 }
 .badge-xs { font-size: 10px; padding: 2px 8px; letter-spacing: 0.05em; }
 .badge-red { color: #ff6b6b; background: rgba(255, 107, 107, 0.12); border-color: rgba(255, 107, 107, 0.5); }
+.badge-green { color: #2ecc71; background: rgba(46, 204, 113, 0.12); border-color: rgba(46, 204, 113, 0.5); }
 .btn-danger { color: #ff6b6b; }
 
 /* El efecto hover solo en dispositivos con ratón: en el móvil se quedaba "pegado" tras tocar */

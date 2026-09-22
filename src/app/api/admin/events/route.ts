@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       event_time: body.event_time || null,
       poster_url: body.poster_url || null,
       is_published: body.is_published ?? true,
+      free_entry: body.free_entry ?? false,
       sort_order: body.sort_order ?? 0,
       ...('value' in cap ? { capacity: cap.value } : {})
     })

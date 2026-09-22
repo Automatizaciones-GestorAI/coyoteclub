@@ -67,12 +67,14 @@ export async function POST(req: NextRequest) {
   }
 
   // La noche: debe existir, estar publicada y no haber pasado. Si hay noches publicadas, hay que elegir una.
-  const { data: events } = await supabaseAdmin.from('events').select('id,title,event_date').eq('is_published', true);
+  const { data: events } = await supabaseAdmin.from('events').select('id,title,event_date,free_entry').eq('is_published', true);
   const eventId = requestedEvent ?? tier.event_id ?? null;
-  let night: { title: string; event_date: string } | null = null;
+  let night: { title: string; event_date: string; free_entry: boolean } | null = null;
   if (eventId) {
     night = events?.find((e) => e.id === eventId) ?? null;
     if (!night) return fail('Esa noche no está disponible', 400);
+    // Doble comprobación por si alguien salta la web: una noche de entrada gratuita nunca se cobra.
+    if (night.free_entry) return fail('Esta noche es de entrada gratuita, no hace falta comprar entrada.', 400);
     if (night.event_date < upcomingCutoff()) return fail('Esa noche ya ha pasado', 400);
     if (tier.event_id && tier.event_id !== eventId) return fail('Este tramo no es de esa noche', 400);
   } else if (events && events.length > 0) {
