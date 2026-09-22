@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { isUpcoming } from '@/lib/stock';
 
 type Evt = {
   id: string;
@@ -82,9 +83,61 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
   }
 
   async function deleteEvent(id: string) {
-    if (!confirm('¿Borrar este evento?')) return;
+    if (!confirm('¿Borrar este evento? Si ya tuvo ventas, mejor ocúltalo en vez de borrarlo: las entradas vendidas se quedan pero pierden la noche a la que pertenecían.')) return;
     await fetch(`/api/admin/events/${id}`, { method: 'DELETE' });
     setEvents((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  // Las pasadas no se pierden (ni sus ventas): solo se pliegan aquí abajo para que el panel no se haga eterno.
+  const upcoming = events.filter((e) => isUpcoming(e.event_date));
+  const past = events.filter((e) => !isUpcoming(e.event_date));
+
+  function renderCard(evt: Evt) {
+    return (
+      <div key={evt.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {evt.poster_url && (
+          <img src={evt.poster_url} alt={evt.title} style={{ width: '100%', borderRadius: 10 }} />
+        )}
+        {editing === evt.id ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div><label className="label">Título / noche</label><input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></div>
+            <div><label className="label">DJ / lineup</label><input value={draft.dj} onChange={(e) => setDraft({ ...draft, dj: e.target.value })} /></div>
+            <div><label className="label">Fecha</label><input type="date" value={draft.event_date} onChange={(e) => setDraft({ ...draft, event_date: e.target.value })} /></div>
+            <div><label className="label">Hora</label><input value={draft.event_time} onChange={(e) => setDraft({ ...draft, event_time: e.target.value })} /></div>
+            <div><label className="label">Aforo (personas)</label><input type="number" inputMode="numeric" min={0} step={1} value={draft.capacity} onChange={(e) => setDraft({ ...draft, capacity: e.target.value })} placeholder="Sin límite" /></div>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontWeight: 700 }}>{evt.title}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>{evt.dj}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
+              {evt.event_date} {evt.event_time}
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
+              Aforo: <strong style={{ color: 'var(--text)' }}>{evt.capacity === null ? 'sin límite' : `${evt.capacity} personas`}</strong>
+            </div>
+          </>
+        )}
+        <div className="actions">
+          {editing === evt.id ? (
+            <>
+              <button className="btn btn-sm" onClick={() => saveEdit(evt)}>Guardar</button>
+              <button className="btn-outline btn-sm" onClick={() => setEditing(null)}>Cancelar</button>
+            </>
+          ) : (
+            <>
+              <button className="btn-outline btn-sm" onClick={() => startEdit(evt)}>Editar</button>
+              <button className="btn-outline btn-sm" onClick={() => togglePublished(evt)}>
+                {evt.is_published ? 'Publicado' : 'Oculto'}
+              </button>
+              <button className="btn-outline btn-sm btn-danger" onClick={() => deleteEvent(evt.id)}>
+                Borrar
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -131,53 +184,28 @@ export default function EventsClient({ initialEvents }: { initialEvents: Evt[] }
         </div>
       </form>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: 16 }}>
-        {events.map((evt) => (
-          <div key={evt.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {evt.poster_url && (
-              <img src={evt.poster_url} alt={evt.title} style={{ width: '100%', borderRadius: 10 }} />
-            )}
-            {editing === evt.id ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div><label className="label">Título / noche</label><input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></div>
-                <div><label className="label">DJ / lineup</label><input value={draft.dj} onChange={(e) => setDraft({ ...draft, dj: e.target.value })} /></div>
-                <div><label className="label">Fecha</label><input type="date" value={draft.event_date} onChange={(e) => setDraft({ ...draft, event_date: e.target.value })} /></div>
-                <div><label className="label">Hora</label><input value={draft.event_time} onChange={(e) => setDraft({ ...draft, event_time: e.target.value })} /></div>
-                <div><label className="label">Aforo (personas)</label><input type="number" inputMode="numeric" min={0} step={1} value={draft.capacity} onChange={(e) => setDraft({ ...draft, capacity: e.target.value })} placeholder="Sin límite" /></div>
-              </div>
-            ) : (
-              <>
-                <div style={{ fontWeight: 700 }}>{evt.title}</div>
-                <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>{evt.dj}</div>
-                <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
-                  {evt.event_date} {evt.event_time}
-                </div>
-                <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
-                  Aforo: <strong style={{ color: 'var(--text)' }}>{evt.capacity === null ? 'sin límite' : `${evt.capacity} personas`}</strong>
-                </div>
-              </>
-            )}
-            <div className="actions">
-              {editing === evt.id ? (
-                <>
-                  <button className="btn btn-sm" onClick={() => saveEdit(evt)}>Guardar</button>
-                  <button className="btn-outline btn-sm" onClick={() => setEditing(null)}>Cancelar</button>
-                </>
-              ) : (
-                <>
-                  <button className="btn-outline btn-sm" onClick={() => startEdit(evt)}>Editar</button>
-                  <button className="btn-outline btn-sm" onClick={() => togglePublished(evt)}>
-                    {evt.is_published ? 'Publicado' : 'Oculto'}
-                  </button>
-                  <button className="btn-outline btn-sm btn-danger" onClick={() => deleteEvent(evt.id)}>
-                    Borrar
-                  </button>
-                </>
-              )}
-            </div>
+      <div>
+        <h2 style={{ fontSize: 18, margin: '0 0 12px' }}>Próximas ({upcoming.length})</h2>
+        {upcoming.length === 0 ? (
+          <p style={{ fontSize: 14, color: 'var(--text-dim)' }}>No hay ninguna noche futura creada todavía.</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: 16 }}>
+            {upcoming.map(renderCard)}
           </div>
-        ))}
+        )}
       </div>
+
+      {past.length > 0 && (
+        <details>
+          <summary style={{ cursor: 'pointer', fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Pasadas ({past.length})</summary>
+          <p style={{ fontSize: 13, color: 'var(--text-dim)', margin: '10px 0 16px' }}>
+            Ya no se ven en la web. Se guardan aquí junto con sus ventas: mejor no borrarlas, solo consultarlas si hace falta.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: 16 }}>
+            {past.map(renderCard)}
+          </div>
+        </details>
+      )}
     </div>
   );
 }
