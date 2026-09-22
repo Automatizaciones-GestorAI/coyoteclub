@@ -6,6 +6,7 @@ type Img = { id: string; url: string; alt: string | null };
 export default function GalleryClient({ initialImages }: { initialImages: Img[] }) {
   const [images, setImages] = useState(initialImages);
   const [uploading, setUploading] = useState(false);
+  const [alt, setAlt] = useState('');
 
   async function uploadImage(file: File) {
     setUploading(true);
@@ -18,10 +19,11 @@ export default function GalleryClient({ initialImages }: { initialImages: Img[] 
     const res = await fetch('/api/admin/gallery', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, sort_order: images.length })
+      body: JSON.stringify({ url, alt: alt.trim() || null, sort_order: images.length })
     });
     const created = await res.json();
     setImages((prev) => [...prev, created]);
+    setAlt('');
     setUploading(false);
   }
 
@@ -35,6 +37,11 @@ export default function GalleryClient({ initialImages }: { initialImages: Img[] 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <h1 style={{ fontSize: 32, margin: 0 }}>Galería</h1>
       <div className="card" style={{ maxWidth: 400, width: '100%' }}>
+        <label className="label" htmlFor="gal-alt">Qué se ve en la foto</label>
+        <input id="gal-alt" value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="Ej. Pista de baile llena de gente" maxLength={120} style={{ marginBottom: 10 }} />
+        <div style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 10 }}>
+          Ayuda a que la foto salga en las búsquedas de imágenes de Google y a las personas que usan lector de pantalla. Escríbelo antes de elegir el archivo.
+        </div>
         <label className="label">Añadir foto</label>
         <input type="file" accept="image/*" onChange={(e) => e.target.files && uploadImage(e.target.files[0])} />
         {uploading && <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 6 }}>Subiendo…</div>}

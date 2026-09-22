@@ -3,7 +3,7 @@ import { esc, formatEventDate, formatPrice } from '@/lib/format';
 import { bestAvailability, isUpcoming, nightsFor, tierAvailability, type Availability, type NightInfo } from '@/lib/stock';
 import { expirePending, getUsage } from '@/lib/stock-db';
 import { legalLinksHtml, paymentLogosHtml } from '@/lib/legal-ui';
-import { CLUB_WHATSAPP, siteBase } from '@/lib/site';
+import { CLUB_WHATSAPP, SITE_URL } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +12,6 @@ const MAP_QUERY = encodeURIComponent('Coyote Club, C. Trillo, 15, Seseña, Toled
 
 export default async function Home() {
   await expirePending();
-  const base = await siteBase();
   const [{ data: events }, { data: tiers }, { data: gallery }, usage] = await Promise.all([
     supabaseAdmin
       .from('events')
@@ -472,22 +471,55 @@ export default async function Home() {
     })();
   `;
 
-  // Datos del negocio para Google (dirección, teléfono y horario). No se marcan reseñas: Google no las admite si las escribe el propio negocio.
-  const businessJson = JSON.stringify({
-    '@context': 'https://schema.org',
+  const clubPlace = {
     '@type': 'NightClub',
+    '@id': `${SITE_URL}/#club`,
     name: 'Coyote Club',
-    ...(base ? { url: base, image: `${base}/images/share.jpg` } : {}),
+    url: SITE_URL,
+    image: `${SITE_URL}/images/share.jpg`,
     telephone: `+${CLUB_WHATSAPP}`,
+    priceRange: '€€',
     address: { '@type': 'PostalAddress', streetAddress: 'C. Trillo, 15', addressLocality: 'Seseña', addressRegion: 'Toledo', addressCountry: 'ES' },
     openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Friday', 'Saturday'], opens: '00:00', closes: '06:00' }],
     sameAs: ['https://www.instagram.com/coyoteclub2.0/']
-  }).replace(/</g, '\\u003c');
+  };
+
+  // Una noche por evento publicado y aún por venir: así Google puede enseñar la fecha, el cartel y el enlace
+  // de compra directamente en el buscador (resultado enriquecido de eventos), no solo la ficha del local.
+  // Precio de referencia de cada noche: el tramo online más barato que valga para esa noche (el propio de la noche, si lo
+  // tiene, o si no cualquiera de los que valen para todas). Google pide un precio en la oferta del evento; con tramos que
+  // suben de precio según se venden, se enseña "desde" el más bajo disponible ahora mismo, nunca uno inventado.
+  const onlineTiers = (tiers || []).filter((t) => t.kind !== 'door' && t.is_active);
+  const lowestPriceFor = (eventId: string) => {
+    const forThis = onlineTiers.filter((t) => !t.event_id || t.event_id === eventId);
+    const pool = forThis.length ? forThis : onlineTiers;
+    return pool.length ? Math.min(...pool.map((t) => t.price_cents)) / 100 : null;
+  };
+
+  const eventJsonList = (events || [])
+    .filter((e) => isUpcoming(e.event_date))
+    .map((e) => ({
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: e.title,
+      startDate: e.event_time ? `${e.event_date}T${e.event_time}` : e.event_date,
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      eventStatus: 'https://schema.org/EventScheduled',
+      location: { '@id': `${SITE_URL}/#club`, name: 'Coyote Club', address: clubPlace.address },
+      ...(e.poster_url ? { image: [`${SITE_URL}${e.poster_url}`] } : {}),
+      ...(e.dj ? { performer: { '@type': 'PerformingGroup', name: e.dj } } : {}),
+      offers: { '@type': 'Offer', url: `${SITE_URL}/entradas`, priceCurrency: 'EUR', availability: 'https://schema.org/InStock', ...(lowestPriceFor(e.id) !== null ? { price: lowestPriceFor(e.id)!.toFixed(2) } : {}) }
+    }));
+
+  // No se marcan reseñas: Google no las admite si las escribe el propio negocio.
+  const jsonLdBlocks = [{ '@context': 'https://schema.org', ...clubPlace }, ...eventJsonList].map((o) => JSON.stringify(o).replace(/</g, '\\u003c'));
 
   return (
     <>
       <link rel="preload" as="image" href="/images/hero.webp" type="image/webp" fetchPriority="high" />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: businessJson }} />
+      {jsonLdBlocks.map((json, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />
+      ))}
       <style dangerouslySetInnerHTML={{ __html: pageCss }} />
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <script dangerouslySetInnerHTML={{ __html: pageScript }} />

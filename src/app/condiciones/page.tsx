@@ -4,7 +4,11 @@ import { LegalLayout } from '../_legal/LegalLayout';
 
 export const dynamic = 'force-dynamic'; // los datos del titular se leen del entorno en cada visita
 
-export const metadata = { title: 'Condiciones de compra · Coyote Club' };
+export const metadata = {
+  title: 'Condiciones de compra · Coyote Club',
+  description: 'Condiciones para comprar una entrada online de Coyote Club: precio, pago, acceso a la sala y devoluciones.',
+  alternates: { canonical: '/condiciones' }
+};
 
 export default function Condiciones() {
   return (

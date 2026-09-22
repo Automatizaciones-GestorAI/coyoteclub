@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Entradas · Coyote Club',
-  description: 'Compra online tu entrada para las noches de Coyote Club en Seseña (Toledo). Pago seguro con tarjeta.'
+  description: 'Compra online tu entrada para las noches de Coyote Club, discoteca en Seseña (Toledo). Pago seguro con tarjeta, Apple Pay y Google Pay.',
+  alternates: { canonical: '/entradas' }
 };
 
 export default async function EntradasPage({ searchParams }: { searchParams: Promise<{ pago?: string }> }) {

@@ -17,9 +17,23 @@ const fontCache = [{ key: 'Cache-Control', value: 'public, max-age=31536000, imm
 // Lo que lleva datos privados (panel, API, entradas con QR) no se guarda en cachés compartidas.
 const noStore = [{ key: 'Cache-Control', value: 'no-store, max-age=0' }, { key: 'X-Robots-Tag', value: 'noindex, nofollow' }];
 
+// Dirección definitiva de la web (debe coincidir con SITE_URL de src/lib/site.ts). La web también se ve por
+// www. y por la dirección provisional de EasyPanel: sin esto, Google las trataba como 3 sitios con el mismo
+// contenido (contenido duplicado) y repartía el posicionamiento entre las tres en vez de sumarlo en una.
+const CANONICAL_HOST = 'coyotteclub.com';
+const OTHER_HOSTS = ['www.coyotteclub.com', 'coyote-club-web.r9lvic.easypanel.host'];
+
 const nextConfig = {
   output: 'standalone',
   poweredByHeader: false,
+  async redirects() {
+    return OTHER_HOSTS.map((host) => ({
+      source: '/:path*',
+      has: [{ type: 'host', value: host }],
+      destination: `https://${CANONICAL_HOST}/:path*`,
+      permanent: true
+    }));
+  },
   // No se usa next/image: se desactiva el optimizador para que no sirva de proxy de imágenes ajenas.
   images: { unoptimized: true },
   // Los carteles y fotos de ejemplo están guardados en la base de datos con su dirección antigua (.png/.jpg): se sirven desde su

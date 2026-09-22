@@ -1,9 +1,10 @@
 import type { MetadataRoute } from 'next';
-import { siteBase } from '@/lib/site';
+import { SITE_URL } from '@/lib/site';
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = await siteBase();
-  if (!base) return [];
+// Siempre con la dirección definitiva: si Google pidiera esto por www. o por la dirección provisional,
+// no debe salir un mapa del sitio que liste esas mismas direcciones (reforzaría el contenido duplicado).
+export default function sitemap(): MetadataRoute.Sitemap {
+  const base = SITE_URL;
   const pages: [string, MetadataRoute.Sitemap[number]['changeFrequency'], number][] = [
     ['/', 'weekly', 1],
     ['/entradas', 'weekly', 0.9],

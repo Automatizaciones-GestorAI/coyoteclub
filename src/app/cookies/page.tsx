@@ -1,7 +1,11 @@
 import { LEGAL } from '@/lib/legal';
 import { LegalLayout } from '../_legal/LegalLayout';
 
-export const metadata = { title: 'Política de cookies · Coyote Club' };
+export const metadata = {
+  title: 'Política de cookies · Coyote Club',
+  description: 'Qué cookies usa la web de Coyote Club (ninguna, salvo la sesión del personal) y cómo funcionan los enlaces a Google Maps, Stripe e Instagram.',
+  alternates: { canonical: '/cookies' }
+};
 
 export default function Cookies() {
   return (

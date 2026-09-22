@@ -4,7 +4,11 @@ import { LegalLayout } from '../_legal/LegalLayout';
 
 export const dynamic = 'force-dynamic'; // los datos del titular se leen del entorno en cada visita
 
-export const metadata = { title: 'Aviso legal · Coyote Club' };
+export const metadata = {
+  title: 'Aviso legal · Coyote Club',
+  description: 'Datos del titular de la web de Coyote Club, discoteca en Seseña (Toledo), conforme a la Ley de Servicios de la Sociedad de la Información.',
+  alternates: { canonical: '/aviso-legal' }
+};
 
 export default function AvisoLegal() {
   return (

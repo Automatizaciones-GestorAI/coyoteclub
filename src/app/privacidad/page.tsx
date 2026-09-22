@@ -4,7 +4,11 @@ import { LegalLayout } from '../_legal/LegalLayout';
 
 export const dynamic = 'force-dynamic'; // los datos del titular se leen del entorno en cada visita
 
-export const metadata = { title: 'Política de privacidad · Coyote Club' };
+export const metadata = {
+  title: 'Política de privacidad · Coyote Club',
+  description: 'Cómo trata Coyote Club los datos personales al comprar una entrada o usar la web: qué se guarda, para qué y qué derechos tienes.',
+  alternates: { canonical: '/privacidad' }
+};
 
 export default function Privacidad() {
   return (

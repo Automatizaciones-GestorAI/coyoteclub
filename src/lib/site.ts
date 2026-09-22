@@ -1,5 +1,13 @@
 import { headers } from 'next/headers';
 
+// Dirección PERMANENTE y definitiva de la web (con dominio propio, confirmado en septiembre de 2026).
+// Se usa fija (no depende de una variable de entorno) en todo lo que Google lee para saber cuál es la
+// dirección "de verdad" del sitio (canonical, sitemap.xml, robots.txt, datos estructurados): así, aunque
+// alguien entre por www. o por la dirección provisional de EasyPanel, esas señales siempre apuntan aquí,
+// nunca a la dirección por la que entró. Si el dominio cambiara alguna vez, se actualiza este único valor
+// (y el de next.config.js, que redirige aquí las demás direcciones).
+export const SITE_URL = 'https://coyotteclub.com';
+
 // WhatsApp del club (el mismo que sale en la web). Formato internacional sin "+".
 export const CLUB_WHATSAPP = '34653533549';
 
