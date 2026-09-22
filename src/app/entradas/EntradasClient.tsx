@@ -9,11 +9,12 @@ type Tier = {
   description: string | null;
   price_cents: number;
   kind: 'online' | 'door' | 'standing';
+  category: string;
   event_id: string | null;
   availability: 'ok' | 'low' | 'soldout';
   nights: Record<string, 'ok' | 'low' | 'soldout'>; // estado de este tramo en cada noche
 };
-type Evt = { id: string; title: string; event_date: string; event_time: string | null };
+type Evt = { id: string; title: string; event_date: string; event_time: string | null; free_entry: boolean };
 
 export default function EntradasClient({ tiers, events, paymentFailed, paymentUnknown, noUpcoming }: { tiers: Tier[]; events: Evt[]; paymentFailed?: boolean; paymentUnknown?: boolean; noUpcoming?: boolean }) {
   const [openTier, setOpenTier] = useState<Tier | null>(null);
@@ -71,8 +72,11 @@ export default function EntradasClient({ tiers, events, paymentFailed, paymentUn
     window.location.href = json.url;
   }
 
-  // Noches que se ofrecen para el tramo abierto: las suyas si es de una noche concreta, o todas las que se pueden comprar.
-  const nightsForTier = openTier ? events.filter((ev) => !openTier.event_id || ev.id === openTier.event_id) : [];
+  // Noches que se ofrecen para el tramo abierto: las suyas si es de una noche concreta, o todas las que se pueden
+  // comprar. Las noches de entrada gratuita solo se ofrecen para tramos de "consumición" (la entrada ya es gratis).
+  const nightsForTier = openTier
+    ? events.filter((ev) => (!openTier.event_id || ev.id === openTier.event_id) && (!ev.free_entry || openTier.category === 'consumicion'))
+    : [];
 
   return (
     <div style={{ minHeight: '100vh', padding: 'clamp(28px, 8vw, 64px) 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>

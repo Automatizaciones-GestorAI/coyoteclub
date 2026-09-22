@@ -8,12 +8,13 @@ type Tier = {
   description: string | null;
   price_cents: number;
   kind: string;
+  category: string;
   is_active: boolean;
   sort_order: number;
   night_limit?: number | null;
 };
 
-const EMPTY = { label: '', description: '', price: '', kind: 'online', night_limit: '' };
+const EMPTY = { label: '', description: '', price: '', kind: 'online', category: 'entrada', night_limit: '' };
 const euros = (v: string) => Number(String(v).trim().replace(',', '.'));
 
 export default function PricingClient({ initialTiers, stats }: { initialTiers: Tier[]; stats: Record<string, { label: string; n: number }[]> }) {
@@ -52,7 +53,7 @@ export default function PricingClient({ initialTiers, stats }: { initialTiers: T
       const res = await fetch('/api/admin/pricing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: form.label, description: form.description, price_cents: Math.round(price * 100), kind: form.kind, night_limit: form.kind === 'door' ? null : form.night_limit })
+        body: JSON.stringify({ label: form.label, description: form.description, price_cents: Math.round(price * 100), kind: form.kind, category: form.category, night_limit: form.kind === 'door' ? null : form.night_limit })
       });
       const json = await res.json();
       if (!res.ok) setNotice(json.error || 'No se pudo crear el tramo.');
@@ -102,6 +103,12 @@ export default function PricingClient({ initialTiers, stats }: { initialTiers: T
           «Activo / Oculto» quita un tramo de la venta sin borrarlo.
         </p>
         <p style={{ margin: 0 }}>
+          <strong style={{ color: 'var(--text)' }}>Entrada / Consumición:</strong> en una noche marcada como «Entrada
+          gratuita» (en Eventos), los tramos de tipo Entrada dejan de venderse esa noche —pagar solo por entrar no
+          tiene sentido si es gratis—, pero los de tipo Consumición (bonos de copas, ofertas…) se siguen vendiendo
+          igual, con Stripe incluido.
+        </p>
+        <p style={{ margin: 0 }}>
           <strong style={{ color: 'var(--text)' }}>Entradas por noche:</strong> el máximo de entradas de ese tramo que se
           venden cada noche (el viernes y el sábado cuentan por separado). Déjalo vacío si no quieres poner límite.
           Además cada noche tiene un <strong style={{ color: 'var(--text)' }}>aforo total</strong> (máximo de entradas que se
@@ -137,6 +144,13 @@ export default function PricingClient({ initialTiers, stats }: { initialTiers: T
               <select id="nt-kind" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
                 <option value="online">Online (con pago en la web)</option>
                 <option value="door">Solo taquilla (pago en puerta)</option>
+              </select>
+            </div>
+            <div>
+              <label className="label" htmlFor="nt-category">Tipo de tramo</label>
+              <select id="nt-category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                <option value="entrada">Entrada</option>
+                <option value="consumicion">Consumición</option>
               </select>
             </div>
             {form.kind !== 'door' && (
@@ -181,6 +195,13 @@ export default function PricingClient({ initialTiers, stats }: { initialTiers: T
                     else e.target.value = (tier.price_cents / 100).toFixed(2);
                   }}
                 />
+              </div>
+              <div>
+                <label className="label">Tipo de tramo</label>
+                <select value={tier.category} onChange={(e) => updateTier(tier, { category: e.target.value })}>
+                  <option value="entrada">Entrada</option>
+                  <option value="consumicion">Consumición</option>
+                </select>
               </div>
               <div>
                 {tier.kind === 'door' ? (

@@ -73,8 +73,11 @@ export async function POST(req: NextRequest) {
   if (eventId) {
     night = events?.find((e) => e.id === eventId) ?? null;
     if (!night) return fail('Esa noche no está disponible', 400);
-    // Doble comprobación por si alguien salta la web: una noche de entrada gratuita nunca se cobra.
-    if (night.free_entry) return fail('Esta noche es de entrada gratuita, no hace falta comprar entrada.', 400);
+    // Doble comprobación por si alguien salta la web: en una noche de entrada gratuita solo se cobran
+    // los tramos de "consumición" (bonos de copas, ofertas...); los de "entrada" nunca se cobran.
+    if (night.free_entry && tier.category !== 'consumicion') {
+      return fail('Esta noche es de entrada gratuita, no hace falta comprar entrada.', 400);
+    }
     if (night.event_date < upcomingCutoff()) return fail('Esa noche ya ha pasado', 400);
     if (tier.event_id && tier.event_id !== eventId) return fail('Este tramo no es de esa noche', 400);
   } else if (events && events.length > 0) {

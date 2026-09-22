@@ -27,13 +27,15 @@ export default async function Home() {
     getUsage()
   ]);
 
-  // Aforo por noche: solo cuentan las noches que aún se pueden comprar online. Las de entrada gratuita se
-  // quedan fuera: no se vende nada para ellas, así que no hay aforo online que contar (el control en puerta
-  // de una noche gratis es manual, como ya lo es hoy el pago en taquilla).
+  // Aforo por noche: solo cuentan las noches que aún se pueden comprar online. En una noche de entrada
+  // gratuita, solo cuentan para los tramos de "consumición" (bonos de copas, ofertas...): los de "entrada"
+  // no tienen nada que vender ahí, la entrada ya es gratis (el control en puerta es manual, como el pago
+  // en taquilla).
   const published = events || [];
-  const purchasableUpcoming = published.filter((e) => isUpcoming(e.event_date) && !e.free_entry);
-  const upcomingNights: NightInfo[] = purchasableUpcoming.map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
-  const noUpcoming = published.length > 0 && purchasableUpcoming.length === 0;
+  const allUpcoming = published.filter((e) => isUpcoming(e.event_date));
+  const paidNights: NightInfo[] = allUpcoming.filter((e) => !e.free_entry).map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
+  const allNights: NightInfo[] = allUpcoming.map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
+  const noUpcoming = published.length > 0 && allUpcoming.length === 0;
 
   const eventsHtml = (events || [])
     .map((evt, i) => {
@@ -65,12 +67,13 @@ export default async function Home() {
   const tiersHtml = (tiers || [])
     .map((tier) => {
       const price = formatPrice(tier.price_cents);
+      const offered = tier.category === 'consumicion' ? allNights : paidNights;
       const state: Availability | 'soon' =
         tier.kind === 'door'
           ? 'ok'
           : noUpcoming
             ? 'soon'
-            : bestAvailability(nightsFor(tier, upcomingNights, published.length > 0).map((n) => tierAvailability(tier, n, usage)));
+            : bestAvailability(nightsFor(tier, offered, published.length > 0).map((n) => tierAvailability(tier, n, usage)));
       const cta =
         tier.kind === 'door'
           ? `<div class="btn-outline" style="text-align: center;">Pago en caja</div>`

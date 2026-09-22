@@ -8,6 +8,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const body = await req.json();
 
+  if ('category' in body && !['entrada', 'consumicion'].includes(body.category)) {
+    return NextResponse.json({ error: 'Categoría de tramo no válida' }, { status: 400 });
+  }
+
   // Entradas por noche (null = sin límite). Solo se actualiza si el panel lo envía.
   const limitChange: { night_limit?: number | null } = {};
   if ('night_limit' in body) {
@@ -29,6 +33,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       description: body.description || null,
       price_cents: body.price_cents,
       kind: body.kind,
+      category: body.category,
       is_active: body.is_active,
       sort_order: body.sort_order,
       ...limitChange

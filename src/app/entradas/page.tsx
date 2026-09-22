@@ -28,26 +28,29 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
 
   // Aforo por noche: solo se ofrecen las noches que aún se pueden comprar. El número de entradas que
   // quedan no sale del servidor: solo el estado de cada tramo en cada noche (ok / low / soldout).
-  // Las noches de entrada gratuita no entran aquí: no hay nada que comprar para ellas.
+  // Las noches de entrada gratuita solo entran en el cálculo de los tramos de tipo "consumición" (bonos de
+  // copas, ofertas...): los de tipo "entrada" no tienen nada que vender ahí, la entrada ya es gratis.
   const usage = await getUsage();
   const published = events || [];
-  const upcoming = published.filter((e) => isUpcoming(e.event_date) && !e.free_entry);
-  const nightInfos: NightInfo[] = upcoming.map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
+  const allUpcoming = published.filter((e) => isUpcoming(e.event_date));
+  const paidNights: NightInfo[] = allUpcoming.filter((e) => !e.free_entry).map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
+  const allNights: NightInfo[] = allUpcoming.map((e) => ({ id: e.id, capacity: e.capacity ?? null }));
   const publicTiers = (tiers || []).map(({ stock, night_limit, ...tier }) => {
-    const nights = nightsFor(tier, nightInfos, published.length > 0);
+    const offered = tier.category === 'consumicion' ? allNights : paidNights;
+    const nights = nightsFor(tier, offered, published.length > 0);
     const perNight: Record<string, Availability> = {};
     for (const n of nights) if (n.id) perNight[n.id] = tierAvailability({ ...tier, night_limit }, n, usage);
     const availability: Availability =
       tier.kind === 'door' ? 'ok' : bestAvailability(nights.map((n) => tierAvailability({ ...tier, night_limit }, n, usage)));
     return { ...tier, availability, nights: perNight };
   });
-  const publicEvents = upcoming.map(({ id, title, event_date, event_time }) => ({ id, title, event_date, event_time }));
+  const publicEvents = allUpcoming.map(({ id, title, event_date, event_time, free_entry }) => ({ id, title, event_date, event_time, free_entry }));
 
   return (
     <EntradasClient
       tiers={publicTiers}
       events={publicEvents}
-      noUpcoming={published.length > 0 && upcoming.length === 0}
+      noUpcoming={published.length > 0 && allUpcoming.length === 0}
       paymentFailed={pago === 'ko'}
       paymentUnknown={pago === 'err'}
     />
