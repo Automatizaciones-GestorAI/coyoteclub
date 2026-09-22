@@ -117,7 +117,7 @@ export default async function Home() {
       <a class="link-underline" href="/entradas" style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim);">ENTRADAS</a>
       <a class="link-underline" href="#galeria" style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim);">GALERÍA</a>
       <a class="link-underline" href="#como-llegar" style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim);">CÓMO LLEGAR</a>
-      <a href="https://wa.me/34653533549" class="btn" style="font-size: 13px; padding: 12px 22px;">RESERVA POR WHATSAPP</a>
+      <a href="https://wa.me/34653533549" class="btn" style="font-size: 13px; padding: 12px 22px;">DUDAS POR WHATSAPP</a>
     </div>
   </div>
 
