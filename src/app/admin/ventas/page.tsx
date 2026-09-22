@@ -175,7 +175,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           </a>
         )}
 
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="card card-hero" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div className="label" style={{ margin: 0 }}>INGRESOS POR ENTRADAS</div>
           <div className="display" style={{ fontSize: 'clamp(48px, 12vw, 64px)', lineHeight: 1 }}>{eur(revenue)}</div>
           <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
@@ -225,7 +225,14 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                   </div>
                   {cap !== null && (
                     <div role="progressbar" aria-valuemin={0} aria-valuemax={cap} aria-valuenow={Math.min(taken, cap)} aria-label={`Entradas vendidas de ${e.title}`} style={{ height: 10, borderRadius: 999, background: 'var(--line)', overflow: 'hidden' }}>
-                      <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: over ? '#ff4d4d' : hot ? '#ffbe3c' : 'var(--accent)' }} />
+                      <div
+                        style={{
+                          width: `${pct}%`,
+                          height: '100%',
+                          borderRadius: 999,
+                          background: over ? '#ff4d4d' : hot ? '#ffbe3c' : 'linear-gradient(90deg, var(--accent), var(--accent-soft))'
+                        }}
+                      />
                     </div>
                   )}
                   <div style={{ fontSize: 13, color: over ? '#ff9b9b' : 'var(--text-dim)' }}>

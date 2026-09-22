@@ -8,16 +8,19 @@
   --bg: #0b0b0c;
   --bg-alt: #151316;
   --bg-card: #1b191c;
+  --bg-card-hi: #221f23; /* un pelín más claro que --bg-card: para el degradado de arriba en .card */
   --line: #2c292a;
   --text: #f5f1ea;
   --text-dim: #a89f97;
   --accent: #ff149c;
+  --accent-soft: #ff62c0; /* rosa más claro, para degradados con --accent (barras, número destacado) */
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: var(--bg);
+  /* Viñeteado sutil en vez de negro plano: más oscuro en las esquinas, casi imperceptible. */
+  background: radial-gradient(ellipse 120% 80% at 50% -10%, var(--bg-alt) 0%, var(--bg) 45%, #060506 100%) fixed;
   color: var(--text);
   font-family: 'Space Grotesk', system-ui, sans-serif;
 }
@@ -104,10 +107,19 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .card {
-  background: var(--bg-card);
+  background: linear-gradient(180deg, var(--bg-card-hi) 0%, var(--bg-card) 100%);
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 28px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Tarjeta con el dato más importante de la pantalla (p. ej. ingresos): un filo de color arriba y el número en rosa. */
+.card-hero {
+  border-top: 3px solid var(--accent);
+}
+.card-hero .display {
+  color: var(--accent);
 }
 
 .label {
