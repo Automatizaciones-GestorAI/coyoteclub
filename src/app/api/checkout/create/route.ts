@@ -105,6 +105,10 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create(
       {
         mode: 'payment',
+        // Solo tarjeta (y con ella, Apple Pay y Google Pay: van bajo el mismo tipo "card" en Stripe). Se excluye
+        // Link a propósito: pide un código por SMS a un servicio de Stripe ajeno al banco, y ese código puede
+        // tardar mucho en llegar o no llegar. Con Apple Pay/Google Pay no hay ese problema (autenticación del propio móvil).
+        payment_method_types: ['card'],
         line_items: [
           {
             quantity: 1,
