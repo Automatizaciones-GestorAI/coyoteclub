@@ -43,10 +43,11 @@ export default async function Home() {
       const sub = [evt.dj, evt.event_time].filter(Boolean).join(' · ');
       const poster = evt.poster_url || '';
       const revealClass = i % 3 === 1 ? 'reveal reveal-d1' : i % 3 === 2 ? 'reveal reveal-d2' : 'reveal';
-      // Noche de entrada gratuita: no hay nada que comprar, así que no se enlaza a /entradas.
+      // Noche de entrada gratuita: se sigue enlazando a /entradas (puede haber ofertas de consumición para
+      // esa noche), con esa noche ya elegida, pero con otro texto: no hace falta "apuntarse" a nada.
       const cta = evt.free_entry
-        ? `<div class="btn-outline event-cta" style="text-align: center; cursor: default;">Entrada gratuita</div>`
-        : `<a href="/entradas" class="btn event-cta">Apúntate →</a>`;
+        ? `<a href="/entradas?evento=${evt.id}" class="btn-outline event-cta">Entrada gratuita →</a>`
+        : `<a href="/entradas?evento=${evt.id}" class="btn event-cta">Apúntate →</a>`;
       return `
       <div class="${revealClass}" style="display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--line);">
         <div style="position: relative; width: 100%; background: var(--bg-alt); border-bottom: 1px solid var(--line); min-height: 200px;">

@@ -11,8 +11,8 @@ export const metadata = {
   alternates: { canonical: '/entradas' }
 };
 
-export default async function EntradasPage({ searchParams }: { searchParams: Promise<{ pago?: string }> }) {
-  const { pago } = await searchParams;
+export default async function EntradasPage({ searchParams }: { searchParams: Promise<{ pago?: string; evento?: string }> }) {
+  const { pago, evento } = await searchParams;
   await expirePending(); // libera plazas de compras abandonadas
   const { data: tiers } = await supabaseAdmin
     .from('price_tiers')
@@ -45,11 +45,14 @@ export default async function EntradasPage({ searchParams }: { searchParams: Pro
     return { ...tier, availability, nights: perNight };
   });
   const publicEvents = allUpcoming.map(({ id, title, event_date, event_time, free_entry }) => ({ id, title, event_date, event_time, free_entry }));
+  // El enlace de cada noche en la portada trae ?evento=<id>: si es una noche real y sigue en venta, se elige sola.
+  const initialEventId = evento && publicEvents.some((e) => e.id === evento) ? evento : undefined;
 
   return (
     <EntradasClient
       tiers={publicTiers}
       events={publicEvents}
+      initialEventId={initialEventId}
       noUpcoming={published.length > 0 && allUpcoming.length === 0}
       paymentFailed={pago === 'ko'}
       paymentUnknown={pago === 'err'}

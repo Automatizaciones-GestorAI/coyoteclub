@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { formatPrice } from '@/lib/format';
+import { formatEventDate, formatPrice } from '@/lib/format';
 import { legalLinksHtml, paymentLogosHtml } from '@/lib/legal-ui';
 
 type Tier = {
@@ -16,11 +16,30 @@ type Tier = {
 };
 type Evt = { id: string; title: string; event_date: string; event_time: string | null; free_entry: boolean };
 
-export default function EntradasClient({ tiers, events, paymentFailed, paymentUnknown, noUpcoming }: { tiers: Tier[]; events: Evt[]; paymentFailed?: boolean; paymentUnknown?: boolean; noUpcoming?: boolean }) {
+export default function EntradasClient({
+  tiers,
+  events,
+  initialEventId,
+  paymentFailed,
+  paymentUnknown,
+  noUpcoming
+}: {
+  tiers: Tier[];
+  events: Evt[];
+  initialEventId?: string;
+  paymentFailed?: boolean;
+  paymentUnknown?: boolean;
+  noUpcoming?: boolean;
+}) {
+  // Con varias noches publicadas, se elige una primero (la de la portada si se vino de ahí, si no la más
+  // próxima) y las tarjetas de abajo enseñan solo lo que aplica a esa noche. Con una sola noche, no hace
+  // falta elegir. Sin ninguna, los tramos se enseñan sin más (modo sin noches, como antes de tener eventos).
+  const [selectedId, setSelectedId] = useState(() => initialEventId ?? (events.length > 0 ? events[0].id : ''));
+  const selectedNight = events.find((e) => e.id === selectedId) ?? null;
+
   const [openTier, setOpenTier] = useState<Tier | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [eventId, setEventId] = useState('');
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,10 +48,12 @@ export default function EntradasClient({ tiers, events, paymentFailed, paymentUn
     setOpenTier(tier);
     setName('');
     setPhone('');
-    setEventId(tier.event_id || '');
     setAccepted(false);
     setError('');
   }
+
+  // Tramos que aplican a la noche elegida (o todos, en modo sin noches).
+  const visibleTiers = events.length === 0 ? tiers : tiers.filter((t) => selectedId in t.nights);
 
   async function submitPurchase(e: React.FormEvent) {
     e.preventDefault();
@@ -49,7 +70,7 @@ export default function EntradasClient({ tiers, events, paymentFailed, paymentUn
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tier_id: openTier.id,
-        event_id: eventId || null,
+        event_id: selectedId || null,
         buyer_name: name,
         buyer_phone: phone,
         accepted_terms: true
@@ -71,12 +92,6 @@ export default function EntradasClient({ tiers, events, paymentFailed, paymentUn
     // Lleva al cliente a la página de pago segura de Stripe (allí se le pide también su email para el recibo)
     window.location.href = json.url;
   }
-
-  // Noches que se ofrecen para el tramo abierto: las suyas si es de una noche concreta, o todas las que se pueden
-  // comprar. Las noches de entrada gratuita solo se ofrecen para tramos de "consumición" (la entrada ya es gratis).
-  const nightsForTier = openTier
-    ? events.filter((ev) => (!openTier.event_id || ev.id === openTier.event_id) && (!ev.free_entry || openTier.category === 'consumicion'))
-    : [];
 
   return (
     <div style={{ minHeight: '100vh', padding: 'clamp(28px, 8vw, 64px) 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40, background: 'radial-gradient(ellipse at 20% 0%, rgba(255,20,156,0.14), transparent 55%), var(--bg)' }}>
@@ -101,34 +116,69 @@ export default function EntradasClient({ tiers, events, paymentFailed, paymentUn
         </p>
       </div>
 
+      {events.length > 1 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 10, width: '100%', maxWidth: 700 }}>
+          {events.map((ev) => (
+            <button
+              key={ev.id}
+              type="button"
+              onClick={() => setSelectedId(ev.id)}
+              className={ev.id === selectedId ? 'btn btn-sm' : 'btn-outline btn-sm'}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '10px 20px', minHeight: 'auto' }}
+            >
+              <span>{ev.title}</span>
+              <span style={{ fontSize: 11, opacity: 0.85, fontWeight: 400 }}>
+                {formatEventDate(ev.event_date)}
+                {ev.free_entry ? ' · GRATIS' : ''}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selectedNight?.free_entry && (
+        <div role="status" className="card" style={{ maxWidth: 480, textAlign: 'center', padding: '14px 20px', borderColor: 'rgba(46,204,113,0.5)' }}>
+          <strong style={{ color: '#2ecc71' }}>Esta noche la entrada es gratuita.</strong>
+          <div style={{ color: 'var(--text-dim)', fontSize: 14, marginTop: 4 }}>No hace falta comprar nada para entrar.</div>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 20, width: '100%', maxWidth: 1100 }}>
-        {tiers.map((tier) => (
-          <div key={tier.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, opacity: tier.availability === 'soldout' || noUpcoming ? 0.6 : 1 }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 6, minHeight: 26 }}>
-                <div className="label" style={{ margin: 0, color: tier.kind === 'door' ? 'var(--text-dim)' : 'var(--accent)' }}>
-                  {tier.label}
+        {visibleTiers.map((tier) => {
+          const state = selectedNight ? tier.nights[selectedNight.id] : tier.availability;
+          return (
+            <div key={tier.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, opacity: state === 'soldout' || noUpcoming ? 0.6 : 1 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 6, minHeight: 26 }}>
+                  <div className="label" style={{ margin: 0, color: tier.kind === 'door' ? 'var(--text-dim)' : 'var(--accent)' }}>
+                    {tier.label}
+                  </div>
+                  {state === 'low' && <span className="badge-low">Quedan pocas</span>}
                 </div>
-                {tier.availability === 'low' && <span className="badge-low">Quedan pocas</span>}
+                <div className="display" style={{ fontSize: 44 }}>
+                  {formatPrice(tier.price_cents)}
+                </div>
+                <div style={{ fontSize: 14, color: 'var(--text-dim)' }}>{tier.description}</div>
               </div>
-              <div className="display" style={{ fontSize: 44 }}>
-                {formatPrice(tier.price_cents)}
-              </div>
-              <div style={{ fontSize: 14, color: 'var(--text-dim)' }}>{tier.description}</div>
+              {tier.kind === 'door' ? (
+                <div className="btn-outline" style={{ textAlign: 'center' }}>Pago en caja</div>
+              ) : noUpcoming ? (
+                <div className="btn-outline" style={{ textAlign: 'center' }}>Próximamente</div>
+              ) : state === 'soldout' ? (
+                <div className="btn-outline" style={{ textAlign: 'center' }}>Agotado</div>
+              ) : (
+                <button className="btn" onClick={() => openBuy(tier)}>
+                  {tier.kind === 'standing' ? 'Comprar' : 'Comprar entrada'}
+                </button>
+              )}
             </div>
-            {tier.kind === 'door' ? (
-              <div className="btn-outline" style={{ textAlign: 'center' }}>Pago en caja</div>
-            ) : noUpcoming ? (
-              <div className="btn-outline" style={{ textAlign: 'center' }}>Próximamente</div>
-            ) : tier.availability === 'soldout' ? (
-              <div className="btn-outline" style={{ textAlign: 'center' }}>Agotado</div>
-            ) : (
-              <button className="btn" onClick={() => openBuy(tier)}>
-                {tier.kind === 'standing' ? 'Comprar' : 'Comprar entrada'}
-              </button>
-            )}
-          </div>
-        ))}
+          );
+        })}
+        {visibleTiers.length === 0 && !noUpcoming && (
+          <p style={{ color: 'var(--text-dim)', gridColumn: '1 / -1', textAlign: 'center' }}>
+            No hay nada que comprar para esta noche.
+          </p>
+        )}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 13, color: 'var(--text-dim)', textAlign: 'center' }}>
         <span dangerouslySetInnerHTML={{ __html: paymentLogosHtml() }} />
@@ -150,6 +200,11 @@ export default function EntradasClient({ tiers, events, paymentFailed, paymentUn
             <div className="display" style={{ fontSize: 24 }}>
               {openTier.label} — {formatPrice(openTier.price_cents)}
             </div>
+            {selectedNight && (
+              <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
+                Para: <strong style={{ color: 'var(--text)' }}>{selectedNight.title} · {formatEventDate(selectedNight.event_date)}</strong>
+              </div>
+            )}
             <div>
               <label className="label">Nombre</label>
               <input value={name} onChange={(e) => setName(e.target.value)} required />
@@ -158,22 +213,6 @@ export default function EntradasClient({ tiers, events, paymentFailed, paymentUn
               <label className="label">Teléfono</label>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} required />
             </div>
-            {nightsForTier.length > 0 && (
-              <div>
-                <label className="label">Noche</label>
-                <select value={eventId} onChange={(e) => setEventId(e.target.value)} required>
-                  <option value="" disabled>Elige la noche</option>
-                  {nightsForTier.map((ev) => {
-                    const st = openTier.nights[ev.id];
-                    return (
-                      <option key={ev.id} value={ev.id} disabled={st === 'soldout'}>
-                        {ev.title} ({ev.event_date}){st === 'soldout' ? ' · Agotada' : st === 'low' ? ' · Quedan pocas' : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            )}
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, lineHeight: 1.5, color: 'var(--text-dim)', cursor: 'pointer' }}>
               <input
                 type="checkbox"
