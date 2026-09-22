@@ -203,7 +203,7 @@ export default async function Home() {
   <div id="eventos" style="width: 100%; box-sizing: border-box; padding: clamp(32px, 6vw, 64px) var(--px) clamp(64px, 12vw, 120px) var(--px); display: flex; flex-direction: column; gap: clamp(28px, 5vw, 48px);">
     <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px;">
       <h2 style="margin: 0; font-size: clamp(34px, 9vw, 56px); color: var(--text);">ESTA SEMANA EN COYOTE</h2>
-      <a class="link-underline" href="https://instagram.com/coyotteclub" style="font-size: 14px; font-weight: 600; color: var(--text-dim);">Cartel completo en Instagram →</a>
+      <a class="link-underline" href="https://www.instagram.com/coyoteclub2.0/" style="font-size: 14px; font-weight: 600; color: var(--text-dim);">Cartel completo en Instagram →</a>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 20px; max-width: 1400px;">
       ${eventsHtml || '<div style="color: var(--text-dim); font-size: 15px;">Sin eventos publicados por ahora.</div>'}
@@ -226,7 +226,7 @@ export default async function Home() {
   <div id="galeria" style="width: 100%; box-sizing: border-box; padding: 0 0 8px 0; display: flex; flex-direction: column; gap: 24px;">
     <div style="padding: 0 var(--px); display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px;">
       <h2 style="margin: 0; font-size: clamp(30px, 8vw, 44px); color: var(--text);">GALERÍA</h2>
-      <a class="link-underline" href="https://instagram.com/coyotteclub" style="font-size: 14px; font-weight: 600; color: var(--text-dim);">@coyotteclub en Instagram →</a>
+      <a class="link-underline" href="https://www.instagram.com/coyoteclub2.0/" style="font-size: 14px; font-weight: 600; color: var(--text-dim);">@coyoteclub2.0 en Instagram →</a>
     </div>
     <div class="gallery-wrap">
       ${galleryHtml}
@@ -288,7 +288,7 @@ export default async function Home() {
     <div style="display: flex; flex-direction: column; gap: 10px;">
       <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: var(--text);">SÍGUENOS</div>
       <div style="display: flex; gap: 16px;">
-        <a href="https://instagram.com/coyotteclub" aria-label="Instagram" style="display: flex; align-items: center;">
+        <a href="https://www.instagram.com/coyoteclub2.0/" aria-label="Instagram" style="display: flex; align-items: center;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.2" cy="6.8" r="1"></circle></svg>
         </a>
         <a href="https://wa.me/34653533549" aria-label="WhatsApp" style="display: flex; align-items: center;">
@@ -481,7 +481,7 @@ export default async function Home() {
     telephone: `+${CLUB_WHATSAPP}`,
     address: { '@type': 'PostalAddress', streetAddress: 'C. Trillo, 15', addressLocality: 'Seseña', addressRegion: 'Toledo', addressCountry: 'ES' },
     openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Friday', 'Saturday'], opens: '00:00', closes: '06:00' }],
-    sameAs: ['https://instagram.com/coyotteclub']
+    sameAs: ['https://www.instagram.com/coyoteclub2.0/']
   }).replace(/</g, '\\u003c');
 
   return (
