@@ -87,7 +87,7 @@ export default async function Home() {
   </div>
 
   <!-- HERO -->
-  <div style="position: relative; width: 100%; box-sizing: border-box; overflow: hidden; padding: clamp(48px, 10vw, 100px) var(--px) clamp(56px, 9vw, 90px) var(--px); display: flex; flex-direction: column; align-items: flex-start; gap: 28px; background-image: radial-gradient(ellipse at 15% 0%, rgba(255,42,122,0.28), transparent 55%), radial-gradient(ellipse at 85% 20%, rgba(130,60,255,0.18), transparent 50%), linear-gradient(90deg, rgba(11,11,12,0.98) 0%, rgba(11,11,12,0.92) 30%, rgba(11,11,12,0.72) 55%, rgba(11,11,12,0.4) 80%, rgba(11,11,12,0.15) 100%), url(/images/hero.webp); background-size: auto, auto, auto, cover; background-position: center, center, center, center 30%; background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;">
+  <div style="position: relative; width: 100%; box-sizing: border-box; overflow: hidden; padding: clamp(48px, 10vw, 100px) var(--px) clamp(56px, 9vw, 90px) var(--px); display: flex; flex-direction: column; align-items: flex-start; gap: 28px; background-image: radial-gradient(ellipse at 15% 0%, rgba(255,42,122,0.28), transparent 55%), radial-gradient(ellipse at 85% 20%, rgba(130,60,255,0.18), transparent 50%), linear-gradient(90deg, rgba(11,11,12,0.98) 0%, rgba(11,11,12,0.92) 30%, rgba(11,11,12,0.72) 55%, rgba(11,11,12,0.4) 80%, rgba(11,11,12,0.15) 100%), url(/images/hero-v2.webp); background-size: auto, auto, auto, cover; background-position: center, center, center, center 30%; background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;">
     <svg style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;" viewBox="0 0 1440 640" preserveAspectRatio="none">
       <line x1="1180" y1="-40" x2="900" y2="680" stroke="${ACCENT}" stroke-width="2" opacity="0.35"></line>
       <line x1="1260" y1="-40" x2="980" y2="680" stroke="#823cff" stroke-width="2" opacity="0.25"></line>
@@ -402,7 +402,7 @@ export default async function Home() {
 
   return (
     <>
-      <link rel="preload" as="image" href="/images/hero.webp" type="image/webp" fetchPriority="high" />
+      <link rel="preload" as="image" href="/images/hero-v2.webp" type="image/webp" fetchPriority="high" />
       {jsonLdBlocks.map((json, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />
       ))}
