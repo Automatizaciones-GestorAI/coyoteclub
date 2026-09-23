@@ -88,7 +88,7 @@ export default async function Home() {
       <line x1="1340" y1="-40" x2="1060" y2="680" stroke="${ACCENT}" stroke-width="1.5" opacity="0.18"></line>
     </svg>
     <div style="position: relative; z-index: 1; filter: drop-shadow(0 0 24px rgba(255,20,150,0.5));">
-      <img src="/images/logo.webp" alt="Coyote Club" style="width: min(665px, calc(100vw - 2 * var(--px))); height: auto; display: block;">
+      <img src="/images/logo.webp" alt="Coyote Club" style="width: min(440px, calc(100vw - 2 * var(--px))); height: auto; display: block;">
     </div>
     <div style="position: relative; z-index: 1; font-size: clamp(12px, 3.4vw, 15px); font-weight: 600; letter-spacing: 0.14em; color: ${ACCENT};">SESEÑA (TOLEDO) · VIERNES Y SÁBADOS</div>
     <h1 style="position: relative; z-index: 1; margin: 0; font-size: clamp(42px, 13vw, 100px); line-height: 0.95; max-width: 900px; color: var(--text);">LA MEJOR<br>SALA DE LA ZONA</h1>
@@ -159,7 +159,7 @@ export default async function Home() {
       <h2 style="margin: 0; font-size: clamp(34px, 9vw, 56px); color: var(--text);">ESTA SEMANA EN COYOTE</h2>
       <a class="link-underline" href="https://www.instagram.com/coyoteclub2.0/" style="font-size: 14px; font-weight: 600; color: var(--text-dim);">Cartel completo en Instagram →</a>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 20px; max-width: 1400px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 300px)); justify-content: center; gap: 20px; max-width: 1400px;">
       ${eventsHtml || '<div style="color: var(--text-dim); font-size: 15px;">Sin eventos publicados por ahora.</div>'}
     </div>
   </div>
