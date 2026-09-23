@@ -36,8 +36,11 @@ export default async function Home() {
       <div class="${revealClass}" style="display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--line);">
         <div style="position: relative; width: 100%; background: var(--bg-alt); border-bottom: 1px solid var(--line); min-height: 200px;">
           ${poster ? `<img src="${esc(poster)}" alt="${esc(evt.title)}" loading="lazy" decoding="async" style="width: 100%; height: auto; display: block;">` : ''}
-          <div style="position: absolute; top: 16px; left: 16px; background: ${ACCENT}; color: #0b0b0c; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; padding: 8px 14px; border-radius: 999px;">${esc(badge)}</div>
-          ${evt.free_entry ? `<div style="position: absolute; top: 16px; right: 16px; background: #2ecc71; color: #0b0b0c; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; padding: 8px 14px; border-radius: 999px;">GRATIS</div>` : ''}
+          <!-- Franja oscura fija (no depende de los colores del cartel, que cambia cada semana): así la fecha
+               siempre se lee, sea cual sea el cartel que suba el club. -->
+          <div style="position: absolute; inset: 0; height: 100px; background: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 60%, transparent 100%); pointer-events: none;"></div>
+          <div style="position: absolute; top: 18px; left: 18px; color: var(--text); font-weight: 700; font-size: 13px; letter-spacing: 0.05em; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">${esc(badge)}</div>
+          ${evt.free_entry ? `<div style="position: absolute; top: 14px; right: 16px; background: #2ecc71; color: #0b0b0c; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; padding: 8px 14px; border-radius: 999px; box-shadow: 0 2px 10px rgba(0,0,0,0.4);">GRATIS</div>` : ''}
         </div>
         <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 20px; padding: clamp(20px, 5vw, 32px); flex-grow: 1;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
