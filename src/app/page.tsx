@@ -30,8 +30,8 @@ export default async function Home() {
       const sub = [evt.dj, evt.event_time].filter(Boolean).join(' · ');
       const poster = evt.poster_url || '';
       const revealClass = i % 3 === 1 ? 'reveal reveal-d1' : i % 3 === 2 ? 'reveal reveal-d2' : 'reveal';
-      // La compra se hace toda en /entradas (nav de arriba y botón del hero); aquí solo se informa. En una
-      // noche de entrada gratuita, un sello lo deja claro sin necesidad de enlazar a ningún sitio.
+      // La compra en sí se hace en /entradas (el selector de ahí ya sabe qué ofrecer según la noche), pero
+      // cada tarjeta lleva su propio acceso: si no, "Entradas" solo estaba en el menú y en el hero.
       return `
       <div class="${revealClass}" style="display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--line);">
         <div style="position: relative; width: 100%; background: var(--bg-alt); border-bottom: 1px solid var(--line); min-height: 200px;">
@@ -39,9 +39,12 @@ export default async function Home() {
           <div style="position: absolute; top: 16px; left: 16px; background: ${ACCENT}; color: #0b0b0c; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; padding: 8px 14px; border-radius: 999px;">${esc(badge)}</div>
           ${evt.free_entry ? `<div style="position: absolute; top: 16px; right: 16px; background: #2ecc71; color: #0b0b0c; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; padding: 8px 14px; border-radius: 999px;">GRATIS</div>` : ''}
         </div>
-        <div style="display: flex; flex-direction: column; gap: 8px; padding: clamp(20px, 5vw, 32px);">
-          <div class="display" style="font-size: 36px; color: var(--text);">${esc(evt.title)}</div>
-          <div style="font-size: 15px; color: var(--text-dim);">${esc(sub)}</div>
+        <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 20px; padding: clamp(20px, 5vw, 32px); flex-grow: 1;">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="display" style="font-size: 36px; color: var(--text);">${esc(evt.title)}</div>
+            <div style="font-size: 15px; color: var(--text-dim);">${esc(sub)}</div>
+          </div>
+          <a href="/entradas?evento=${evt.id}" class="btn-outline event-cta">Entradas →</a>
         </div>
       </div>`;
     })
@@ -159,7 +162,7 @@ export default async function Home() {
       <h2 style="margin: 0; font-size: clamp(34px, 9vw, 56px); color: var(--text);">ESTA SEMANA EN COYOTE</h2>
       <a class="link-underline" href="https://www.instagram.com/coyoteclub2.0/" style="font-size: 14px; font-weight: 600; color: var(--text-dim);">Cartel completo en Instagram →</a>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 300px)); justify-content: center; gap: 20px; max-width: 1400px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 380px)); justify-content: center; gap: 20px; max-width: 1400px; width: 100%; margin: 0 auto;">
       ${eventsHtml || '<div style="color: var(--text-dim); font-size: 15px;">Sin eventos publicados por ahora.</div>'}
     </div>
   </div>
@@ -258,6 +261,7 @@ export default async function Home() {
     .stat-mid{border-left:1px solid var(--line);border-right:1px solid var(--line);padding-left:24px;}
     .stat-last{padding-left:24px;}
     .club-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;}
+    .event-cta{align-self:flex-start;}
     .gallery-wrap{padding:0 var(--px);display:flex;flex-wrap:wrap;gap:4px;justify-content:center;}
     .gallery-item{height:380px;max-width:100%;overflow:hidden;}
     .gallery-item img{height:100%;width:auto;max-width:100%;object-fit:cover;display:block;}
@@ -285,6 +289,7 @@ export default async function Home() {
       .stat-mid{border-left:0;border-right:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-left:0;}
       .stat-last{padding-left:0;}
       .cta-row > a,.cta-row > div{flex:1 1 100%;}
+      .event-cta{align-self:stretch;}
       .gallery-wrap{gap:6px;}
       .gallery-item{height:auto;aspect-ratio:1/1;flex:1 1 calc(50% - 6px);max-width:calc(50% - 3px);}
       .gallery-item img{width:100%;height:100%;}
