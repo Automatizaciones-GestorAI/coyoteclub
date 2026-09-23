@@ -47,7 +47,7 @@ export default async function Home() {
             <div class="display" style="font-size: 36px; color: var(--text);">${esc(evt.title)}</div>
             <div style="font-size: 15px; color: var(--text-dim);">${esc(sub)}</div>
           </div>
-          <a href="/entradas?evento=${evt.id}" class="btn-outline event-cta">Entradas →</a>
+          <a href="/entradas?evento=${evt.id}" class="btn-outline event-cta" data-track="card_entradas">Entradas →</a>
         </div>
       </div>`;
     })
@@ -79,10 +79,10 @@ export default async function Home() {
     <div class="nav-links">
       <a class="link-underline" href="#coyote" style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim);">EL CLUB</a>
       <a class="link-underline" href="#eventos" style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim);">EVENTOS</a>
-      <a class="link-underline" href="/entradas" style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim);">ENTRADAS</a>
+      <a class="link-underline" href="/entradas" style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim);" data-track="nav_entradas">ENTRADAS</a>
       <a class="link-underline" href="#galeria" style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim);">GALERÍA</a>
       <a class="link-underline" href="#como-llegar" style="font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-dim);">CÓMO LLEGAR</a>
-      <a href="https://wa.me/34653533549" class="btn" style="font-size: 13px; padding: 12px 22px;">DUDAS POR WHATSAPP</a>
+      <a href="https://wa.me/34653533549" class="btn" style="font-size: 13px; padding: 12px 22px;" data-track="whatsapp_nav">DUDAS POR WHATSAPP</a>
     </div>
   </div>
 
@@ -100,7 +100,7 @@ export default async function Home() {
     <h1 style="position: relative; z-index: 1; margin: 0; font-size: clamp(42px, 13vw, 100px); line-height: 0.95; max-width: 900px; color: var(--text);">LA MEJOR<br>SALA DE LA ZONA</h1>
     <p style="position: relative; z-index: 1; margin: 0; max-width: 560px; font-size: clamp(16px, 4.6vw, 19px); line-height: 1.5; color: var(--text-dim);">Pista, barra y la mejor selección de cócteles, abierto hasta las 6 de la mañana.</p>
     <div class="cta-row" style="position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px;">
-      <a href="/entradas" class="btn" style="font-size: 15px; padding: 18px 34px;">ENTRADAS →</a>
+      <a href="/entradas" class="btn" style="font-size: 15px; padding: 18px 34px;" data-track="hero_entradas">ENTRADAS →</a>
       <a href="#eventos" class="btn-outline" style="font-size: 15px; padding: 18px 34px;">VER EVENTOS</a>
     </div>
   </div>
@@ -203,7 +203,7 @@ export default async function Home() {
         </div>
       </div>
       <div class="cta-row" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px;">
-        <a href="https://wa.me/34653533549" class="btn" style="font-size: 15px; padding: 16px 30px;">ESCRÍBENOS POR WHATSAPP</a>
+        <a href="https://wa.me/34653533549" class="btn" style="font-size: 15px; padding: 16px 30px;" data-track="whatsapp_footer">ESCRÍBENOS POR WHATSAPP</a>
         <a href="https://www.google.com/maps/search/?api=1&amp;query=${MAP_QUERY}" target="_blank" rel="noopener" class="btn-outline" style="font-size: 15px; padding: 16px 30px;">ABRIR EN GOOGLE MAPS</a>
       </div>
     </div>
@@ -212,7 +212,7 @@ export default async function Home() {
       <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" style="position: absolute; top: 8px; right: 10px; font-size: 10px; color: #cfc8c0; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 6px;">© OpenStreetMap</a>
       <div id="map-gate" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 340px; box-sizing: border-box; padding: 14px 16px; border-radius: 16px; background: rgba(11,11,12,0.86); border: 1px solid var(--line); text-align: center;">
         <p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-dim);">Al pulsar se abre el mapa interactivo de Google y tu navegador se conecta con Google. <a href="/cookies" style="text-decoration: underline;">Más información</a></p>
-        <button type="button" id="map-load" class="btn" style="width: 100%;" data-src="https://www.google.com/maps?q=${MAP_QUERY}&amp;output=embed&amp;hl=es">VER MAPA INTERACTIVO</button>
+        <button type="button" id="map-load" class="btn" style="width: 100%;" data-src="https://www.google.com/maps?q=${MAP_QUERY}&amp;output=embed&amp;hl=es" data-track="mapa">VER MAPA INTERACTIVO</button>
       </div>
     </div>
   </div>
@@ -314,6 +314,21 @@ export default async function Home() {
 
   const pageScript = `
     (function () {
+      // Seguimiento propio (sin cookies, ver /cookies): una visita a la portada y los clics en los botones
+      // marcados con data-track. Si falla, no debe notarse nada al navegar por la web.
+      function track(kind, extra) {
+        try {
+          var body = JSON.stringify(kind === 'pageview' ? { kind: kind, path: extra } : { kind: kind, label: extra });
+          if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
+          else fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function () {});
+        } catch (e) {}
+      }
+      track('pageview', '/');
+      document.addEventListener('click', function (e) {
+        var el = e.target.closest('[data-track]');
+        if (el) track('click', el.getAttribute('data-track'));
+      }, { passive: true });
+
       var els = document.querySelectorAll('.reveal, .reveal-d1, .reveal-d2');
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {

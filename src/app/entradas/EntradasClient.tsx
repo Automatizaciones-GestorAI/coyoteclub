@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatEventDate, formatPrice } from '@/lib/format';
 import { legalLinksHtml, paymentLogosHtml } from '@/lib/legal-ui';
+import { track } from '@/lib/track';
 
 type Tier = {
   id: string;
@@ -36,6 +37,10 @@ export default function EntradasClient({
   // falta elegir. Sin ninguna, los tramos se enseñan sin más (modo sin noches, como antes de tener eventos).
   const [selectedId, setSelectedId] = useState(() => initialEventId ?? (events.length > 0 ? events[0].id : ''));
   const selectedNight = events.find((e) => e.id === selectedId) ?? null;
+
+  useEffect(() => {
+    track('pageview', '/entradas');
+  }, []);
 
   const [openTier, setOpenTier] = useState<Tier | null>(null);
   const [name, setName] = useState('');

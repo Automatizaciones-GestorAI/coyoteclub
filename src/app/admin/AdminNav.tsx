@@ -8,7 +8,8 @@ const ADMIN_ITEMS = [
   { href: '/admin/events', label: 'Eventos' },
   { href: '/admin/pricing', label: 'Precios' },
   { href: '/admin/gallery', label: 'Galería' },
-  { href: '/scan', label: 'Escanear QR' }
+  { href: '/scan', label: 'Escanear QR' },
+  { href: '/admin/seguimiento', label: 'Seguimiento' }
 ];
 const DOOR_ITEMS = [
   { href: '/scan', label: 'Escanear QR' },
