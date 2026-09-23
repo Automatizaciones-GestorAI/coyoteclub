@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function EventsPage() {
   await requireAdmin();
-  const { data } = await supabaseAdmin.from('events').select('*').order('sort_order');
+  const { data } = await supabaseAdmin.from('events').select('*').order('event_date');
   return (
     <AdminShell>
       <EventsClient initialEvents={data || []} />

@@ -15,7 +15,7 @@ export default async function Home() {
       .from('events')
       .select('*')
       .eq('is_published', true)
-      .order('sort_order', { ascending: true }),
+      .order('event_date', { ascending: true }),
     supabaseAdmin
       .from('price_tiers')
       .select('*')
