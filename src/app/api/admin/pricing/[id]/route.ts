@@ -2,6 +2,8 @@ import { adminGuard } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const denied = await adminGuard();
   if (denied) return denied;
@@ -10,6 +12,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if ('category' in body && !['entrada', 'consumicion'].includes(body.category)) {
     return NextResponse.json({ error: 'Categoría de tramo no válida' }, { status: 400 });
+  }
+
+  // Noche a la que se ata el tramo: vacío/null = todas las noches.
+  const eventIdChange: { event_id?: string | null } = {};
+  if ('event_id' in body) {
+    if (body.event_id === null || body.event_id === '') {
+      eventIdChange.event_id = null;
+    } else if (UUID.test(body.event_id)) {
+      eventIdChange.event_id = body.event_id;
+    } else {
+      return NextResponse.json({ error: 'Noche no válida' }, { status: 400 });
+    }
   }
 
   // Entradas por noche (null = sin límite). Solo se actualiza si el panel lo envía.
@@ -36,7 +50,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       category: body.category,
       is_active: body.is_active,
       sort_order: body.sort_order,
-      ...limitChange
+      ...limitChange,
+      ...eventIdChange
     })
     .eq('id', id)
     .select()

@@ -175,7 +175,7 @@ button { cursor: pointer; font-family: inherit; }
 
 /* Formularios y filas del panel */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.pricing-row { display: grid; grid-template-columns: 1fr 1fr 110px 140px 150px 100px; gap: 12px; align-items: end; }
+.pricing-row { display: grid; grid-template-columns: 1fr 1fr 110px 130px 170px 140px 100px; gap: 12px; align-items: end; }
 .pricing-row .btn-sm { min-height: 44px; }
 .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .center-row { display: flex; justify-content: center; }

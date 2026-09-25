@@ -20,9 +20,11 @@ export default async function PricingPage() {
   const stats: Record<string, { label: string; n: number }[]> = {};
   for (const t of data || []) stats[t.id] = nights.map((e) => ({ label: `${e.title} · ${label(e.event_date)}`, n: usage.tier[`${e.id}|${t.id}`] ?? 0 }));
 
+  const nightOptions = nights.map((e) => ({ id: e.id, label: `${e.title} · ${label(e.event_date)}` }));
+
   return (
     <AdminShell>
-      <PricingClient initialTiers={data || []} stats={stats} />
+      <PricingClient initialTiers={data || []} stats={stats} nights={nightOptions} />
     </AdminShell>
   );
 }

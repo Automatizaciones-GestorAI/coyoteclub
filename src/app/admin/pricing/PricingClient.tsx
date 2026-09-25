@@ -12,12 +12,14 @@ type Tier = {
   is_active: boolean;
   sort_order: number;
   night_limit?: number | null;
+  event_id?: string | null;
 };
+type Night = { id: string; label: string };
 
-const EMPTY = { label: '', description: '', price: '', kind: 'online', category: 'entrada', night_limit: '' };
+const EMPTY = { label: '', description: '', price: '', kind: 'online', category: 'entrada', night_limit: '', event_id: '' };
 const euros = (v: string) => Number(String(v).trim().replace(',', '.'));
 
-export default function PricingClient({ initialTiers, stats }: { initialTiers: Tier[]; stats: Record<string, { label: string; n: number }[]> }) {
+export default function PricingClient({ initialTiers, stats, nights }: { initialTiers: Tier[]; stats: Record<string, { label: string; n: number }[]>; nights: Night[] }) {
   const [tiers, setTiers] = useState(initialTiers);
   const [form, setForm] = useState(EMPTY);
   const [open, setOpen] = useState(false);
@@ -53,7 +55,7 @@ export default function PricingClient({ initialTiers, stats }: { initialTiers: T
       const res = await fetch('/api/admin/pricing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: form.label, description: form.description, price_cents: Math.round(price * 100), kind: form.kind, category: form.category, night_limit: form.kind === 'door' ? null : form.night_limit })
+        body: JSON.stringify({ label: form.label, description: form.description, price_cents: Math.round(price * 100), kind: form.kind, category: form.category, event_id: form.event_id || null, night_limit: form.kind === 'door' ? null : form.night_limit })
       });
       const json = await res.json();
       if (!res.ok) setNotice(json.error || 'No se pudo crear el tramo.');
@@ -99,8 +101,12 @@ export default function PricingClient({ initialTiers, stats }: { initialTiers: T
       <h1 style={{ fontSize: 32, margin: 0 }}>Precios</h1>
       <div style={{ color: 'var(--text-dim)', maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <p style={{ margin: 0 }}>
-          Los tramos valen para todas las noches. Edita el precio o la descripción y se guarda al salir del campo.
-          «Activo / Oculto» quita un tramo de la venta sin borrarlo.
+          Edita el precio o la descripción y se guarda al salir del campo. «Activo / Oculto» quita un tramo de la
+          venta sin borrarlo.
+        </p>
+        <p style={{ margin: 0 }}>
+          <strong style={{ color: 'var(--text)' }}>Noche:</strong> por defecto cada tramo vale para todas las
+          noches. Si eliges una noche en concreto, ese tramo solo se ofrece ahí — para el resto no existe.
         </p>
         <p style={{ margin: 0 }}>
           <strong style={{ color: 'var(--text)' }}>Entrada / Consumición:</strong> en una noche marcada como «Entrada
@@ -153,6 +159,15 @@ export default function PricingClient({ initialTiers, stats }: { initialTiers: T
                 <option value="consumicion">Consumición</option>
               </select>
             </div>
+            <div>
+              <label className="label" htmlFor="nt-night">Noche</label>
+              <select id="nt-night" value={form.event_id} onChange={(e) => setForm({ ...form, event_id: e.target.value })}>
+                <option value="">Todas las noches</option>
+                {nights.map((n) => (
+                  <option key={n.id} value={n.id}>{n.label}</option>
+                ))}
+              </select>
+            </div>
             {form.kind !== 'door' && (
               <div>
                 <label className="label" htmlFor="nt-stock">Entradas por noche</label>
@@ -201,6 +216,19 @@ export default function PricingClient({ initialTiers, stats }: { initialTiers: T
                 <select value={tier.category} onChange={(e) => updateTier(tier, { category: e.target.value })}>
                   <option value="entrada">Entrada</option>
                   <option value="consumicion">Consumición</option>
+                </select>
+              </div>
+              <div>
+                <label className="label">Noche</label>
+                <select value={tier.event_id ?? ''} onChange={(e) => updateTier(tier, { event_id: e.target.value || null })}>
+                  <option value="">Todas las noches</option>
+                  {nights.map((n) => (
+                    <option key={n.id} value={n.id}>{n.label}</option>
+                  ))}
+                  {/* Si la noche a la que está atado ya pasó (o no está publicada), se enseña igual para no perderla de vista */}
+                  {tier.event_id && !nights.some((n) => n.id === tier.event_id) && (
+                    <option value={tier.event_id}>Noche pasada u oculta</option>
+                  )}
                 </select>
               </div>
               <div>

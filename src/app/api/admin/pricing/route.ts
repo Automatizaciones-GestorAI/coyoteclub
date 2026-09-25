@@ -15,8 +15,10 @@ export async function GET() {
 
 const KINDS = ['online', 'door', 'standing'];
 const CATEGORIES = ['entrada', 'consumicion'];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Crea un tramo nuevo. Vale para todas las noches; se añade al final de la lista.
+// Crea un tramo nuevo. Vale para todas las noches, salvo que se le pase event_id (esa noche en concreto);
+// se añade al final de la lista.
 export async function POST(req: NextRequest) {
   const denied = await adminGuard();
   if (denied) return denied;
@@ -38,6 +40,10 @@ export async function POST(req: NextRequest) {
   if (!Number.isInteger(priceCents) || priceCents < 1 || priceCents > 200_000) return NextResponse.json({ error: 'El precio no es válido' }, { status: 400 });
   if (!KINDS.includes(kind)) return NextResponse.json({ error: 'Tipo de tramo no válido' }, { status: 400 });
   if (!CATEGORIES.includes(category)) return NextResponse.json({ error: 'Categoría de tramo no válida' }, { status: 400 });
+  if (body?.event_id !== null && body?.event_id !== undefined && !UUID.test(body.event_id)) {
+    return NextResponse.json({ error: 'Noche no válida' }, { status: 400 });
+  }
+  const eventId = body?.event_id && UUID.test(body.event_id) ? body.event_id : null;
 
   // Entradas por noche: vacío = sin límite. La taquilla nunca lleva límite.
   let nightLimit: number | null = null;
@@ -51,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('price_tiers')
-    .insert({ label, description: description || null, price_cents: priceCents, kind, category, is_active: true, sort_order: sortOrder, night_limit: nightLimit })
+    .insert({ label, description: description || null, price_cents: priceCents, kind, category, event_id: eventId, is_active: true, sort_order: sortOrder, night_limit: nightLimit })
     .select()
     .single();
   if (error) {
