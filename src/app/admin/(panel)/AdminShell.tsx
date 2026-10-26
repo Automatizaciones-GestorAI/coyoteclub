@@ -3,9 +3,8 @@ import { getSession, homeFor, Session } from '@/lib/auth';
 import AdminNav from './AdminNav';
 import { getReviewCount } from '@/lib/review';
 
-// /admin/login cuelga de esta misma carpeta, así que el layout no puede exigir sesión
-// (redirigiría a /admin/login en bucle). Cada página del panel llama a require...() antes de
-// consultar datos y se envuelve en <AdminShell> para pintar el menú.
+// Cada página del panel llama a require...() antes de consultar datos. El menú y la comprobación de
+// sesión del conjunto viven en layout.tsx (que usa <AdminShell>).
 
 // Páginas de administración: solo el perfil admin (la puerta vuelve a su pantalla).
 export async function requireAdmin(): Promise<Session> {
@@ -29,12 +28,13 @@ export async function requireManager(): Promise<Session> {
   return s;
 }
 
-export default async function AdminShell({ children }: { children: React.ReactNode }) {
-  const s = await getSession();
-  const alerts = s?.role === 'admin' ? await getReviewCount() : 0; // cobros por revisar: aviso rojo en el menú
+export default function AdminShell({ session, children }: { session: Session; children: React.ReactNode }) {
+  // Cobros por revisar (aviso rojo del menú). No se espera aquí: la consulta arranca ya y el aviso aparece
+  // cuando llega, sin retrasar ni la primera pintura ni la página. Se refresca con router.refresh().
+  const alerts = session.role === 'admin' ? getReviewCount() : Promise.resolve(0);
   return (
     <div className="admin-shell">
-      <AdminNav alerts={alerts} role={s?.role ?? 'admin'} manager={!!s?.canManageUsers} name={s?.displayName || s?.username || ''} />
+      <AdminNav alerts={alerts} role={session.role} manager={!!session.canManageUsers} name={session.displayName || session.username || ''} />
       <main className="admin-main">{children}</main>
     </div>
   );

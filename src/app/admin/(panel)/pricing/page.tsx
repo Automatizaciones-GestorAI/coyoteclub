@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { getUsage } from '@/lib/stock-db';
 import { isUpcoming } from '@/lib/stock';
-import AdminShell, { requireAdmin } from '../AdminShell';
+import { requireAdmin } from '../AdminShell';
 import PricingClient from './PricingClient';
 
 export const dynamic = 'force-dynamic';
@@ -22,9 +22,5 @@ export default async function PricingPage() {
 
   const nightOptions = nights.map((e) => ({ id: e.id, label: `${e.title} · ${label(e.event_date)}` }));
 
-  return (
-    <AdminShell>
-      <PricingClient initialTiers={data || []} stats={stats} nights={nightOptions} />
-    </AdminShell>
-  );
+  return <PricingClient initialTiers={data || []} stats={stats} nights={nightOptions} />;
 }

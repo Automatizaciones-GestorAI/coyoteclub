@@ -1,4 +1,5 @@
 'use client';
+import { Suspense, use } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -16,7 +17,13 @@ const DOOR_ITEMS = [
   { href: '/admin/entradas', label: 'Entradas' }
 ];
 
-export default function AdminNav({ alerts = 0, role = 'admin', manager = false, name = '' }: { alerts?: number; role?: 'admin' | 'door'; manager?: boolean; name?: string }) {
+// Número rojo de cobros por revisar. Llega como promesa desde el servidor para no retrasar la página.
+function AlertBadge({ alerts }: { alerts: Promise<number> }) {
+  const n = use(alerts);
+  return n > 0 ? <span className="nav-alert" aria-label={`${n} por revisar`}>{n}</span> : null;
+}
+
+export default function AdminNav({ alerts, role = 'admin', manager = false, name = '' }: { alerts?: Promise<number>; role?: 'admin' | 'door'; manager?: boolean; name?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const items = [...(role === 'door' ? DOOR_ITEMS : ADMIN_ITEMS), ...(manager ? [{ href: '/admin/usuarios', label: 'Usuarios' }] : []), { href: '/admin/cuenta', label: 'Mi cuenta' }];
@@ -42,8 +49,10 @@ export default function AdminNav({ alerts = 0, role = 'admin', manager = false, 
             className={pathname === item.href ? 'admin-link active' : 'admin-link'}
           >
             {item.label}
-            {item.href === '/admin/entradas' && alerts > 0 && (
-              <span className="nav-alert" aria-label={`${alerts} por revisar`}>{alerts}</span>
+            {item.href === '/admin/entradas' && alerts && (
+              <Suspense fallback={null}>
+                <AlertBadge alerts={alerts} />
+              </Suspense>
             )}
           </Link>
         ))}

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
 
 const DAY = 86_400_000;
@@ -18,7 +19,8 @@ export const ANOMALY_TEXT: Record<string, string> = {
 const since = (days: number) => new Date(Date.now() - days * DAY).toISOString();
 
 // Cuántas cosas hay pendientes de revisar (para el aviso rojo del menú). Si algo falla, 0.
-export async function getReviewCount(): Promise<number> {
+// Con cache(): el menú y la página (Ventas) lo piden en la misma petición y solo se consulta una vez.
+export const getReviewCount = cache(async (): Promise<number> => {
   try {
     const [a, b, c] = await Promise.all([
       supabaseAdmin.from('tickets').select('id', { count: 'exact', head: true }).eq('status', 'cancelled').eq('cancel_reason', 'expired').is('reviewed_at', null).gte('created_at', since(14)),
@@ -30,7 +32,7 @@ export async function getReviewCount(): Promise<number> {
   } catch {
     return 0;
   }
-}
+});
 
 export async function getReviewItems() {
   const [expired, events, manual] = await Promise.all([
